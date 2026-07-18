@@ -40,7 +40,7 @@
                             <tr>
                                 <td>{{ $loop->iteration + ($categories->currentPage() - 1) * $categories->perPage() }}</td>
                                 <td>{{ $category->name }}</td>
-                                <td>{{ $category->products()->count() }}</td>
+                                <td>{{ $category->products_count }}</td>
                                 <td>{{ $category->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-warning">
