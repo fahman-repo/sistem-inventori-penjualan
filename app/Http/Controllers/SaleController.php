@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Services\ActivityLogger;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\RedirectResponse;
@@ -70,7 +71,7 @@ class SaleController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
 
         // Use DB::transaction for data integrity
-        DB::transaction(function () use ($validated, $total, $invoiceNumber) {
+        $sale = DB::transaction(function () use ($validated, $total, $invoiceNumber) {
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => auth()->id(),
@@ -94,7 +95,11 @@ class SaleController extends Controller
                 // Decrease product stock - automatically reduce
                 Product::where('id', $item['product_id'])->decrement('stock', $item['quantity']);
             }
+
+            return $sale;
         });
+
+        ActivityLogger::log('create', $sale, null, $sale->toArray());
 
         return redirect()->route('sales.index')
             ->with('success', 'Penjualan berhasil ditambahkan.');

@@ -309,6 +309,26 @@ return [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
+        [
+            'type' => 'navbar-notification',
+            'id' => 'low-stock-notification',
+            'icon' => 'fas fa-bell',
+            'icon_color' => 'warning',
+            'label' => '0',
+            'label_color' => 'danger',
+            'url' => 'admin/reports/stock',
+            'dropdown_mode' => true,
+            'dropdown_flabel' => 'Lihat Laporan Stok',
+            'topnav_right' => true,
+            'update_cfg' => [
+                'route' => ['notifications.low-stock'],
+                'period' => 30,
+            ],
+        ],
+        [
+            'type' => 'darkmode-widget',
+            'topnav_right' => true,
+        ],
 
         // Sidebar items:
         [
@@ -374,6 +394,18 @@ return [
                     'icon' => 'fas fa-fw fa-chart-pie',
                 ],
             ],
+        ],
+        [
+            'text' => 'Stock Opname',
+            'url' => 'admin/stock-opnames',
+            'icon' => 'fas fa-fw fa-clipboard-list',
+            'can' => 'view-master-data',
+        ],
+        [
+            'text' => 'Activity Log',
+            'url' => 'admin/activity-logs',
+            'icon' => 'fas fa-fw fa-history',
+            'can' => 'view-master-data',
         ],
     ],
 

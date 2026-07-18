@@ -21,13 +21,21 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('admin/purchases', PurchaseController::class);
     Route::get('admin/reports/stock', [App\Http\Controllers\ReportController::class, 'stock'])->name('reports.stock');
     Route::get('admin/reports/sales', [App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('admin/reports/sales/export', [App\Http\Controllers\ReportController::class, 'exportSalesExcel'])->name('reports.sales.export');
     Route::get('admin/reports/profit', [App\Http\Controllers\ReportController::class, 'profit'])->name('reports.profit');
+    Route::get('admin/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('admin/stock-opnames', [App\Http\Controllers\StockOpnameController::class, 'index'])->name('stock-opnames.index');
+    Route::get('admin/stock-opnames/create', [App\Http\Controllers\StockOpnameController::class, 'create'])->name('stock-opnames.create');
+    Route::post('admin/stock-opnames', [App\Http\Controllers\StockOpnameController::class, 'store'])->name('stock-opnames.store');
+    Route::get('admin/stock-opnames/{stockOpname}', [App\Http\Controllers\StockOpnameController::class, 'show'])->name('stock-opnames.show');
 });
 
 // Sales routes - for all authenticated users
 Route::middleware(['auth'])->group(function () {
     Route::resource('sales', SaleController::class);
     Route::get('sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
+    Route::get('notifications/low-stock', App\Http\Controllers\NotificationController::class)
+        ->name('notifications.low-stock');
 });
 
 Route::middleware('auth')->group(function () {

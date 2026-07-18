@@ -148,7 +148,63 @@ suppliers 1---N purchases (opsional)
 
 purchases 1---N purchase_items N---1 products
 sales     1---N sale_items     N---1 products
+users     1---N stock_opnames
+stock_opnames 1---N stock_opname_items N---1 products
 ```
+
+## 9. activity_logs *(Fase 2 — Audit Trail)*
+
+| Kolom       | Tipe                              | Keterangan                                    |
+|-------------|--------------------------------------|--------------------------------------------------|
+| id          | bigIncrements                        | PK                                                 |
+| user_id     | foreignId → users.id                 | siapa yang melakukan aksi                          |
+| action      | string                                | contoh: 'create', 'update', 'delete', 'stock_opname' |
+| model_type  | string                                | nama model terkait, contoh: 'Product'              |
+| model_id    | bigInteger                            | id record yang diubah                              |
+| description | text, nullable                       | ringkasan perubahan                                |
+| old_values  | json, nullable                       | data sebelum perubahan                             |
+| new_values  | json, nullable                       | data sesudah perubahan                             |
+| timestamps  | -                                     |                                                     |
+
+Relasi:
+- `belongsTo(User::class)`
+
+---
+
+## 10. stock_opnames *(Fase 2 — header)*
+
+| Kolom         | Tipe                        | Keterangan                        |
+|---------------|-------------------------------|--------------------------------------|
+| id            | bigIncrements                 | PK                                     |
+| opname_number | string, unique                | contoh: SO-20260712-0001               |
+| user_id       | foreignId → users.id          | siapa yang melakukan opname            |
+| opname_date   | date                            |                                         |
+| notes         | text, nullable                 |                                         |
+| timestamps    | -                               |                                         |
+
+Relasi:
+- `belongsTo(User::class)`
+- `hasMany(StockOpnameItem::class)`
+
+---
+
+## 11. stock_opname_items *(Fase 2 — detail)*
+
+| Kolom          | Tipe                                | Keterangan                                  |
+|----------------|----------------------------------------|--------------------------------------------------|
+| id             | bigIncrements                          | PK                                                 |
+| stock_opname_id| foreignId → stock_opnames.id, cascade  |                                                    |
+| product_id     | foreignId → products.id                |                                                    |
+| system_stock   | integer                                 | stok menurut sistem saat opname dibuat            |
+| physical_stock | integer                                 | hasil hitung fisik                                |
+| difference     | integer                                 | physical_stock - system_stock                     |
+| timestamps     | -                                        |                                                    |
+
+Relasi:
+- `belongsTo(StockOpname::class)`
+- `belongsTo(Product::class)`
+
+---
 
 ## Urutan Migration yang Disarankan
 1. `categories`
@@ -158,6 +214,11 @@ sales     1---N sale_items     N---1 products
 5. `purchase_items` (bergantung ke purchases, products)
 6. `sales` (bergantung ke users)
 7. `sale_items` (bergantung ke sales, products)
+
+**Fase 2:**
+8. `activity_logs` (bergantung ke users)
+9. `stock_opnames` (bergantung ke users)
+10. `stock_opname_items` (bergantung ke stock_opnames, products)
 
 ## Contoh Seeder Awal (untuk testing)
 - 3-5 kategori (Makanan, Minuman, ATK, dll)

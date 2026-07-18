@@ -66,6 +66,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Activity log yang dicatat oleh user ini.
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
+     * Stock opname yang dilakukan user ini.
+     */
+    public function stockOpnames(): HasMany
+    {
+        return $this->hasMany(StockOpname::class);
+    }
+
+    /**
      * Apakah user adalah admin.
      */
     public function isAdmin(): bool

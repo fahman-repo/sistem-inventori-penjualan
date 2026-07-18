@@ -54,6 +54,14 @@ class Product extends Model
     }
 
     /**
+     * Item stock opname yang memuat produk ini.
+     */
+    public function stockOpnameItems(): HasMany
+    {
+        return $this->hasMany(StockOpnameItem::class);
+    }
+
+    /**
      * Apakah stok produk sudah di bawah ambang minimum.
      */
     public function isLowStock(): bool

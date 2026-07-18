@@ -74,6 +74,9 @@
                         <button type="submit" class="btn btn-outline-secondary">
                             <i class="fa fa-filter"></i> Filter
                         </button>
+                        <a href="{{ route('reports.sales.export', request()->query()) }}" class="btn btn-success ml-2">
+                            <i class="fa fa-file-excel"></i> Export Excel
+                        </a>
                     </form>
 
                     @if(request('date_from') || request('date_to'))

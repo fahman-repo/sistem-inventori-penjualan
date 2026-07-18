@@ -7,6 +7,7 @@ use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +65,7 @@ class PurchaseController extends Controller
         $invoiceNumber = $this->generateInvoiceNumber();
 
         // Use DB::transaction for data integrity
-        DB::transaction(function () use ($validated, $total, $invoiceNumber) {
+        $purchase = DB::transaction(function () use ($validated, $total, $invoiceNumber) {
             $purchase = Purchase::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => auth()->id(),
@@ -86,7 +87,11 @@ class PurchaseController extends Controller
                 // Update product stock - automatically increase
                 Product::where('id', $item['product_id'])->increment('stock', $item['quantity']);
             }
+
+            return $purchase;
         });
+
+        ActivityLogger::log('create', $purchase, null, $purchase->toArray());
 
         return redirect()->route('purchases.index')
             ->with('success', 'Pembelian berhasil ditambahkan.');

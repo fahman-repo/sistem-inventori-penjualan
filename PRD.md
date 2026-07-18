@@ -52,6 +52,20 @@ distro, dsb), lengkap dengan laporan dasar.
 - **Laporan Penjualan**: total penjualan per hari/bulan, filter rentang tanggal, grafik batang/garis (Chart.js) menampilkan tren penjualan.
 - **Laporan Laba Kotor** (opsional jika waktu cukup): selisih harga jual dan harga beli dari data `sale_items` yang tersimpan.
 
+### 3.8 Activity Log (Fase 2)
+- Setiap aksi create/update/delete pada modul Produk, Pembelian, dan Penjualan otomatis tercatat: siapa, kapan, aksi apa, data sebelum & sesudah.
+- Hanya admin yang bisa melihat halaman riwayat activity log.
+- Filter berdasarkan user dan rentang tanggal.
+- Tujuan: transparansi dan audit trail untuk sistem yang melibatkan uang & stok.
+
+### 3.9 Stock Opname (Fase 2)
+- Admin/kasir yang ditugaskan bisa melakukan pencocokan stok fisik vs stok sistem secara berkala.
+- Saat opname dibuat: sistem menampilkan semua produk beserta stok sistem saat ini, user menginput hasil hitung fisik per produk.
+- Sistem menghitung selisih otomatis (physical_stock - system_stock).
+- Setelah disimpan, stok produk di tabel `products` disesuaikan langsung ke nilai physical_stock (bukan ditambah/dikurangi).
+- Setiap opname tercatat di activity log (aksi 'stock_opname').
+- Riwayat opname bisa dilihat kembali beserta detail selisih tiap produk (selisih negatif = stok hilang, ditandai warna berbeda).
+
 ### 3.7 Dashboard
 - Ringkasan cepat saat login: total produk, produk stok menipis, total penjualan hari ini, grafik penjualan 7 hari terakhir.
 
@@ -68,6 +82,13 @@ distro, dsb), lengkap dengan laporan dasar.
 
 ### Alur Transaksi Pembelian
 Sama seperti alur penjualan, tapi kebalikannya: stok bertambah, tidak perlu validasi batas maksimum stok.
+
+### Alur Stock Opname
+1. User membuka form opname baru, sistem menampilkan seluruh produk beserta stok sistem saat ini.
+2. User menginput hasil hitung fisik untuk tiap produk (produk yang tidak diubah dianggap sama dengan stok sistem).
+3. User submit form.
+4. Server menghitung selisih tiap item, menyimpan header `stock_opnames` + detail `stock_opname_items`, lalu menyesuaikan `products.stock` ke nilai physical_stock — semua dalam satu `DB::transaction()`.
+5. Aksi ini otomatis tercatat di `activity_logs`.
 
 ## 5. Batasan Scope (Non-Goals untuk versi 7 hari)
 - Tidak ada multi-cabang/multi-gudang.

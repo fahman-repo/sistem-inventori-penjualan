@@ -64,6 +64,8 @@ Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permi
 3. Setiap transaksi penjualan otomatis MENGURANGI stok produk terkait.
 4. Harga jual & harga beli yang tersimpan di `sale_items`/`purchase_items` adalah harga SAAT transaksi terjadi (bukan mengambil harga terbaru dari tabel produk), supaya riwayat transaksi tidak berubah jika harga produk di-update kemudian.
 5. Nomor transaksi (invoice number) harus unik, format bebas tapi konsisten, contoh: `INV-20260712-0001`.
+6. *(Fase 2)* Setiap create/update/delete pada Produk, Pembelian, Penjualan WAJIB dicatat lewat `ActivityLogger::log()` — lihat `app/Services/ActivityLogger.php`.
+7. *(Fase 2)* Saat stock opname disimpan, `products.stock` disesuaikan LANGSUNG ke nilai `physical_stock` (bukan ditambah/dikurangi), dan tetap dibungkus `DB::transaction()`.
 
 ## Perintah yang Sering Dipakai
 ```bash
@@ -79,5 +81,5 @@ php artisan adminlte:install --only=auth_views
 ## Catatan untuk Claude Code
 - Selalu baca `SCHEMA.md` sebelum membuat migration/model baru.
 - Selalu baca `PRD.md` sebelum membuat fitur baru agar sesuai alur bisnis.
-- Cek `TASKS.md` untuk tahu progres dan task yang sedang dikerjakan.
-- Jangan generate seluruh aplikasi sekaligus dalam satu prompt — ikuti breakdown harian di `TASKS.md`.
+- Cek `TASKS.md` (fase 1) dan `TASKS_PHASE2.md` (fase 2) untuk tahu progres dan task yang sedang dikerjakan.
+- Jangan generate seluruh aplikasi sekaligus dalam satu prompt — ikuti breakdown per task di `TASKS.md` / `TASKS_PHASE2.md`.

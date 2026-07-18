@@ -6,6 +6,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -54,7 +55,9 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request): RedirectResponse
     {
-        Product::create($request->validated());
+        $product = Product::create($request->validated());
+
+        ActivityLogger::log('create', $product, null, $product->toArray());
 
         return redirect()->route('products.index')
             ->with('success', 'Produk berhasil ditambahkan.');
@@ -81,7 +84,10 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
     {
+        $oldValues = $product->toArray();
         $product->update($request->validated());
+
+        ActivityLogger::log('update', $product, $oldValues, $product->fresh()->toArray());
 
         return redirect()->route('products.index')
             ->with('success', 'Produk berhasil diperbarui.');
@@ -92,7 +98,10 @@ class ProductController extends Controller
      */
     public function destroy(Product $product): RedirectResponse
     {
+        $oldValues = $product->toArray();
         $product->delete();
+
+        ActivityLogger::log('delete', $product, $oldValues, null);
 
         return redirect()->route('products.index')
             ->with('success', 'Produk berhasil dihapus.');

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SalesReportExport;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
@@ -160,6 +163,16 @@ class ReportController extends Controller
             'chartData',
             'categories'
         ));
+    }
+
+    /**
+     * Export sales report to Excel.
+     */
+    public function exportSalesExcel(Request $request): BinaryFileResponse
+    {
+        $fileName = 'laporan-penjualan-' . now()->format('Y-m-d-His') . '.xlsx';
+
+        return Excel::download(new SalesReportExport($request), $fileName);
     }
 
     /**
