@@ -34,11 +34,13 @@ class StoreSaleRequest extends FormRequest
     }
 
     /**
-     * Handle a failed validation attempt.
+     * Validate the request after the primary validation rules pass.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
+     * @return void
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
-    protected function failedValidation(Validator $validator)
+    protected function passedValidation()
     {
         // Aggregate quantities by product (handle duplicate product entries)
         $productQuantities = [];
@@ -56,14 +58,11 @@ class StoreSaleRequest extends FormRequest
         foreach ($productQuantities as $productId => $totalQuantity) {
             $product = \App\Models\Product::find($productId);
             if ($product && $product->stock < $totalQuantity) {
-                $validator->errors()->add(
-                    'items',
-                    "Stok produk '{$product->name}' hanya {$product->stock}, tidak cukup untuk {$totalQuantity} yang diminta."
-                );
+                throw ValidationException::withMessages([
+                    'items' => "Stok produk '{$product->name}' hanya {$product->stock}, tidak cukup untuk {$totalQuantity} yang diminta.",
+                ]);
             }
         }
-
-        throw new ValidationException($validator);
     }
 
     /**

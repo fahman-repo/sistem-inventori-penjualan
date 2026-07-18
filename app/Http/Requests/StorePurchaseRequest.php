@@ -22,7 +22,7 @@ class StorePurchaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'invoice_number' => ['required', 'string', 'max:100', 'unique:purchases,invoice_number'],
+            'invoice_number' => ['nullable', 'string', 'max:100', 'unique:purchases,invoice_number'],
             'supplier_id' => ['nullable', 'exists:suppliers,id'],
             'purchase_date' => ['required', 'date'],
             'items' => ['required', 'array', 'min:1'],
