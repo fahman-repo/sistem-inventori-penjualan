@@ -1,6 +1,6 @@
 # Sistem Inventori & Penjualan (Mini POS)
 
-Aplikasi web untuk mengelola stok barang, transaksi pembelian, dan transaksi penjualan pada toko/usaha kecil. Dilengkapi dengan **Activity Log** (audit trail) dan **Stock Opname** (pencocokan stok fisik). Dibangun sebagai proyek belajar "vibe coding" menggunakan **Claude Code**.
+Aplikasi web untuk mengelola stok barang, transaksi pembelian, dan transaksi penjualan pada toko/usaha kecil. Dilengkapi dengan **Activity Log** (audit trail), **Stock Opname** (pencocokan stok fisik), **Manajemen User**, **Manajemen Supplier & Utang**, serta notifikasi stok menipis dan dark mode. Dibangun sebagai proyek belajar "vibe coding" menggunakan **Claude Code**.
 
 ## 🚀 Tech Stack
 
@@ -37,6 +37,17 @@ Aplikasi web untuk mengelola stok barang, transaksi pembelian, dan transaksi pen
 | **Stock Opname** | Pencocokan stok fisik vs sistem. Input hasil hitung fisik per produk, selisih otomatis, stok disesuaikan ke nilai fisik. Riwayat & detail opname dengan warna selisih (merah = hilang, hijau = lebih). | Admin |
 | **Notifikasi Stok Menipis** | Dropdown di navbar (icon lonceng) menampilkan produk dengan stok ≤ min_stok, diurutkan dari yang paling kritis. Badge jumlah otomatis. | Semua role |
 | **Dark Mode** | Toggle dark/light mode di navbar kanan (bawaan AdminLTE 3). | Semua role |
+
+### Fase 3 — Manajemen User, Supplier & Utang
+
+| Modul | Fitur | Role |
+|-------|-------|------|
+| **Manajemen User** | CRUD user admin/kasir dengan dropdown role tervalidasi, password opsional saat edit, guard agar admin tidak bisa hapus akun sendiri, tercatat di activity log | Admin |
+| **Supplier** | CRUD supplier lengkap (nama, telepon, alamat, email), tampilkan riwayat pembelian per supplier di halaman detail | Admin |
+| **Pembayaran Pembelian** | Status pembayaran (Cash/Credit) pada setiap transaksi pembelian, pilih supplier, otomatis catat utang jika credit | Admin |
+| **Utang Supplier** | Daftar utang dengan filter (status unpaid/partial/paid & supplier), catat pembayaran cicilan, status otomatis berubah sesuai total dibayar, badge warna berbeda | Admin |
+| **Notifikasi Utang Dashboard** | Widget small-box warning/danger utang jatuh tempo, daftar utang yang perlu perhatian di dashboard | Admin |
+| **Export Utang Excel** | Export daftar utang ke Excel mengikuti filter aktif (status, supplier) | Admin |
 
 ## 🛠️ Instalasi
 
@@ -84,13 +95,15 @@ Buka di browser: **http://localhost:8000**
 
 ```
 app/
-├── Models/                  # Eloquent Models (11 model)
+├── Models/                  # Eloquent Models (15 model)
 │   ├── Product.php, Category.php, Supplier.php
 │   ├── Purchase.php, PurchaseItem.php
 │   ├── Sale.php, SaleItem.php
 │   ├── ActivityLog.php
 │   ├── StockOpname.php, StockOpnameItem.php
-│   └── User.php
+│   ├── User.php
+│   ├── SupplierDebt.php, SupplierDebtPayment.php
+│   └── ...
 ├── Http/
 │   ├── Controllers/         # Resource Controllers
 │   │   ├── DashboardController.php
@@ -99,26 +112,33 @@ app/
 │   │   ├── ReportController.php (+ export Excel)
 │   │   ├── ActivityLogController.php
 │   │   ├── StockOpnameController.php
-│   │   └── NotificationController.php
+│   │   ├── NotificationController.php
+│   │   ├── UserController.php             # ⬅️ Fase 3
+│   │   ├── SupplierController.php         # ⬅️ Fase 3
+│   │   └── SupplierDebtController.php     # ⬅️ Fase 3
 │   ├── Requests/            # Form Request classes (validasi)
 │   └── Middleware/          # Role check middleware
 ├── Services/
 │   └── ActivityLogger.php   # Service untuk catat activity log
 ├── Exports/
-│   └── SalesReportExport.php
+│   ├── SalesReportExport.php
+│   └── SupplierDebtExport.php             # ⬅️ Fase 3
 database/
-├── migrations/              # 11 migration (termasuk Fase 2)
+├── migrations/              # 15 migration (termasuk Fase 3)
 └── seeders/                 # Data dummy (kategori, produk, user)
 resources/
 ├── views/
-│   ├── dashboard.blade.php
+│   ├── dashboard.blade.php               (notifikasi utang ⬅️ Fase 3)
 │   ├── categories/          # CRUD kategori
 │   ├── products/            # CRUD produk
-│   ├── purchases/           # Transaksi pembelian
+│   ├── purchases/           # Transaksi pembelian (status bayar ⬅️ Fase 3)
 │   ├── sales/               # Transaksi penjualan
 │   ├── reports/             # Laporan stok, penjualan, laba
 │   ├── activity-logs/       # Riwayat audit trail
-│   └── stock-opnames/       # Form & riwayat opname
+│   ├── stock-opnames/       # Form & riwayat opname
+│   ├── users/               # Manajemen user          ⬅️ Fase 3
+│   ├── suppliers/           # CRUD supplier           ⬅️ Fase 3
+│   └── supplier-debts/      # Daftar & bayar utang    ⬅️ Fase 3
 routes/
 └── web.php                  # Semua route aplikasi
 ```
@@ -140,14 +160,17 @@ routes/
 5. **Nomor invoice unik**: `INV-YYYYMMDD-XXXX` (penjualan), `PO-YYYYMMDD-XXXX` (pembelian), `SO-YYYYMMDD-XXXX` (opname)
 6. **Activity Log**: Setiap create/update/delete pada Produk, Pembelian, dan Penjualan otomatis tercatat
 7. **Stock Opname**: Stok disesuaikan **langsung** ke nilai fisik (bukan ditambah/dikurangi)
+8. **Utang Supplier**: Pembelian credit otomatis tercatat sebagai utang; status (unpaid/partial/paid) dihitung dari total dibayar vs total transaksi
+9. **Guard Hapus User**: Admin tidak bisa menghapus akun dirinya sendiri yang sedang login
 
 ## 📚 Dokumentasi Tambahan
 
 - [PRD.md](PRD.md) — Product Requirement Document (detail fitur & alur bisnis)
 - [CLAUDE.md](CLAUDE.md) — Instruksi pengembangan untuk Claude Code
-- [SCHEMA.md](SCHEMA.md) — Skema database lengkap (11 tabel)
+- [SCHEMA.md](SCHEMA.md) — Skema database lengkap (15 tabel)
 - [TASKS.md](TASKS.md) — Checklist Fase 1 (Hari 1-7)
 - [TASKS_PHASE2.md](TASKS_PHASE2.md) — Checklist Fase 2 (Activity Log, Stock Opname, Quick Wins)
+- [TASKS_PHASE3.md](TASKS_PHASE3.md) — Checklist Fase 3 (Manajemen User, Supplier & Utang)
 
 ## 🤝 Lisensi
 

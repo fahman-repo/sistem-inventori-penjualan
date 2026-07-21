@@ -32,6 +32,16 @@
                                 <td>{{ $purchase->user->name }}</td>
                             </tr>
                             <tr>
+                                <th>Status Pembayaran</th>
+                                <td>
+                                    @if($purchase->payment_status == 'cash')
+                                        <span class="badge badge-success">Cash (Lunas)</span>
+                                    @else
+                                        <span class="badge badge-warning">Credit (Utang)</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Total</th>
                                 <td>Rp {{ number_format($purchase->total, 2, ',', '.') }}</td>
                             </tr>

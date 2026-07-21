@@ -66,6 +66,20 @@ distro, dsb), lengkap dengan laporan dasar.
 - Setiap opname tercatat di activity log (aksi 'stock_opname').
 - Riwayat opname bisa dilihat kembali beserta detail selisih tiap produk (selisih negatif = stok hilang, ditandai warna berbeda).
 
+### 3.10 Manajemen User (Fase 3)
+- Admin bisa CRUD user: tambah kasir baru, edit data user, nonaktifkan/hapus user.
+- Form tambah/edit user memilih role (admin/kasir) lewat dropdown yang tervalidasi (bukan input bebas).
+- Admin tidak bisa menghapus akun dirinya sendiri (guard sederhana agar tidak ada admin yang terkunci dari sistem).
+- Riwayat siapa membuat/mengubah user tercatat lewat activity log yang sudah ada di Fase 2.
+
+### 3.11 Supplier & Utang (Fase 3)
+- Modul supplier penuh: CRUD data supplier (nama, telepon, alamat, email).
+- Setiap transaksi pembelian punya status pembayaran: `cash` (lunas langsung) atau `credit` (menjadi utang).
+- Jika `credit`: sistem otomatis membuat record di `supplier_debts` sebesar total pembelian, dengan status awal `unpaid`.
+- Admin bisa mencatat pembayaran cicilan utang (`supplier_debt_payments`) — status utang otomatis berubah jadi `partial` atau `paid` tergantung total yang sudah dibayar vs total utang.
+- Halaman daftar utang: filter berdasarkan status (unpaid/partial/paid) dan supplier, tampilkan sisa utang & jatuh tempo.
+- Riwayat pembelian per supplier bisa dilihat dari halaman detail supplier.
+
 ### 3.7 Dashboard
 - Ringkasan cepat saat login: total produk, produk stok menipis, total penjualan hari ini, grafik penjualan 7 hari terakhir.
 
@@ -90,11 +104,18 @@ Sama seperti alur penjualan, tapi kebalikannya: stok bertambah, tidak perlu vali
 4. Server menghitung selisih tiap item, menyimpan header `stock_opnames` + detail `stock_opname_items`, lalu menyesuaikan `products.stock` ke nilai physical_stock — semua dalam satu `DB::transaction()`.
 5. Aksi ini otomatis tercatat di `activity_logs`.
 
-## 5. Batasan Scope (Non-Goals untuk versi 7 hari)
+### Alur Pencatatan & Pembayaran Utang Supplier
+1. Admin membuat transaksi pembelian, memilih status pembayaran `credit`.
+2. Sistem otomatis membuat record `supplier_debts` (total_amount = total pembelian, paid_amount = 0, status = 'unpaid').
+3. Saat supplier menerima pembayaran (cicilan atau lunas sekaligus), admin mencatat pembayaran baru di halaman detail utang.
+4. Sistem menambahkan record ke `supplier_debt_payments`, lalu menghitung ulang `paid_amount` (SUM semua payment) dan mengupdate `status`: `paid` jika paid_amount >= total_amount, `partial` jika 0 < paid_amount < total_amount, `unpaid` jika belum ada pembayaran.
+5. Semua proses ini dibungkus `DB::transaction()` agar konsisten.
+
+## 5. Batasan Scope (Non-Goals untuk versi 7 hari, di luar Fase 3)
 - Tidak ada multi-cabang/multi-gudang.
 - Tidak ada integrasi payment gateway.
 - Tidak ada retur barang (bisa jadi pengembangan lanjutan).
-- Tidak ada multi-supplier kompleks (cukup 1 field nama supplier opsional, tanpa modul supplier terpisah jika waktu terbatas).
+- Tidak ada piutang pelanggan (baru mencakup utang ke supplier di Fase 3, piutang pelanggan bisa jadi fase berikutnya).
 
 ## 6. Kriteria Sukses (Definition of Done)
 - Admin bisa CRUD kategori & produk.

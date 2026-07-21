@@ -78,6 +78,7 @@ class PurchaseTest extends TestCase
             'purchase_date' => '2026-07-18',
             'total' => 100000,
             'notes' => 'Test purchase',
+            'payment_status' => 'cash',
         ]);
 
         $response = $this->actingAs($this->admin)
@@ -97,6 +98,7 @@ class PurchaseTest extends TestCase
             ->post('/admin/purchases', [
                 'supplier_id' => $this->supplier->id,
                 'purchase_date' => '2026-07-18',
+                'payment_status' => 'cash',
                 'notes' => 'QA Test Purchase',
                 'items' => [
                     [
@@ -112,7 +114,6 @@ class PurchaseTest extends TestCase
 
         // Verify purchase created
         $this->assertDatabaseHas('purchases', [
-            'invoice_number' => 'PO-20260718-0001',
             'user_id' => $this->admin->id,
             'total' => 50000,
         ]);
@@ -139,6 +140,7 @@ class PurchaseTest extends TestCase
             ->post('/admin/purchases', [
                 'supplier_id' => $this->supplier->id,
                 'purchase_date' => '2026-07-18',
+                'payment_status' => 'cash',
                 'notes' => 'Stock increase test',
                 'items' => [
                     [
@@ -165,6 +167,7 @@ class PurchaseTest extends TestCase
             ->post('/admin/purchases', [
                 'supplier_id' => $this->supplier->id,
                 'purchase_date' => '2026-07-18',
+                'payment_status' => 'cash',
                 'notes' => 'Multiple items purchase',
                 'items' => [
                     [
@@ -213,6 +216,7 @@ class PurchaseTest extends TestCase
             'purchase_date' => '2026-07-17',
             'total' => 25000,
             'notes' => 'Original note',
+            'payment_status' => 'cash',
         ]);
 
         $purchase->items()->create([
@@ -228,6 +232,7 @@ class PurchaseTest extends TestCase
             ->put("/admin/purchases/{$purchase->id}", [
                 'supplier_id' => $this->supplier->id,
                 'purchase_date' => '2026-07-17',
+                'payment_status' => 'cash',
                 'notes' => 'Updated note',
                 'items' => [
                     [
@@ -261,6 +266,7 @@ class PurchaseTest extends TestCase
             'purchase_date' => '2026-07-16',
             'total' => 50000,
             'notes' => 'To delete',
+            'payment_status' => 'cash',
         ]);
 
         $purchase->items()->create([

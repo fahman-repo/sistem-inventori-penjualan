@@ -30,6 +30,8 @@ class StorePurchaseRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.buy_price' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'payment_status' => ['required', 'in:cash,credit'],
+            'due_date' => ['nullable', 'date', 'after_or_equal:purchase_date'],
         ];
     }
 }

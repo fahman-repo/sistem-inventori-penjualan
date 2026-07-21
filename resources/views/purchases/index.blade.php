@@ -65,7 +65,13 @@
                                 <td>{{ $purchase->purchase_date->format('d/m/Y') }}</td>
                                 <td>{{ $purchase->supplier->name ?? '-' }}</td>
                                 <td>Rp {{ number_format($purchase->total, 2, ',', '.') }}</td>
-                                <td><span class="badge badge-success">Selesai</span></td>
+                                <td>
+                                    @if($purchase->payment_status == 'cash')
+                                        <span class="badge badge-success">Cash (Lunas)</span>
+                                    @else
+                                        <span class="badge badge-warning">Credit (Utang)</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <a href="{{ route('purchases.show', $purchase->id) }}" class="btn btn-sm btn-info">
                                         <i class="fa fa-eye"></i> Detail

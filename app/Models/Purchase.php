@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Purchase extends Model
 {
@@ -18,12 +19,33 @@ class Purchase extends Model
         'purchase_date',
         'total',
         'notes',
+        'payment_status',
     ];
 
     protected $casts = [
         'purchase_date' => 'date',
         'total' => 'decimal:2',
     ];
+
+    /**
+     * Payment status labels for display.
+     */
+    public function getPaymentStatusLabelAttribute(): string
+    {
+        return match ($this->payment_status) {
+            'cash'   => 'Cash (Lunas)',
+            'credit' => 'Credit (Utang)',
+            default  => ucfirst($this->payment_status),
+        };
+    }
+
+    /**
+     * Check if payment status is credit (has debt).
+     */
+    public function getIsCreditAttribute(): bool
+    {
+        return $this->payment_status === 'credit';
+    }
 
     /**
      * User (admin) yang menginput pembelian.
@@ -47,5 +69,13 @@ class Purchase extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    /**
+     * Utang yang timbul dari pembelian ini (jika payment_status = credit).
+     */
+    public function supplierDebt(): HasOne
+    {
+        return $this->hasOne(SupplierDebt::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdatePurchaseRequest;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
+use App\Models\SupplierDebt;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,6 +74,7 @@ class PurchaseController extends Controller
                 'purchase_date' => $validated['purchase_date'],
                 'total' => $total,
                 'notes' => $validated['notes'] ?? null,
+                'payment_status' => $validated['payment_status'] ?? 'cash',
             ]);
 
             // Create purchase items and update stock
@@ -86,6 +88,18 @@ class PurchaseController extends Controller
 
                 // Update product stock - automatically increase
                 Product::where('id', $item['product_id'])->increment('stock', $item['quantity']);
+            }
+
+            // If payment is credit, auto-create supplier_debt record
+            if (($validated['payment_status'] ?? 'cash') === 'credit' && !empty($validated['supplier_id'])) {
+                SupplierDebt::create([
+                    'purchase_id'  => $purchase->id,
+                    'supplier_id'  => $validated['supplier_id'],
+                    'total_amount' => $total,
+                    'paid_amount'  => 0,
+                    'due_date'     => $validated['due_date'] ?? null,
+                    'status'       => 'unpaid',
+                ]);
             }
 
             return $purchase;
@@ -140,6 +154,7 @@ class PurchaseController extends Controller
                 'purchase_date' => $validated['purchase_date'],
                 'total' => $total,
                 'notes' => $validated['notes'] ?? null,
+                'payment_status' => $validated['payment_status'] ?? $purchase->payment_status,
             ]);
 
             // Create new purchase items

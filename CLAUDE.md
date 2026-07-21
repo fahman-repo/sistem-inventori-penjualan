@@ -53,7 +53,7 @@ routes/web.php
 ```
 
 ## Role User
-- **admin**: akses penuh ke semua modul (master data, pembelian, penjualan, laporan, kelola user).
+- **admin**: akses penuh ke semua modul (master data, pembelian, penjualan, laporan, kelola user, kelola supplier & utang).
 - **kasir**: hanya bisa akses modul penjualan (buat transaksi baru, lihat riwayat penjualan miliknya).
 
 Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permission` jika ingin lebih rapi — tapi untuk scope 7 hari, middleware sederhana dengan kolom `role` di tabel `users` sudah cukup.
@@ -66,6 +66,8 @@ Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permi
 5. Nomor transaksi (invoice number) harus unik, format bebas tapi konsisten, contoh: `INV-20260712-0001`.
 6. *(Fase 2)* Setiap create/update/delete pada Produk, Pembelian, Penjualan WAJIB dicatat lewat `ActivityLogger::log()` — lihat `app/Services/ActivityLogger.php`.
 7. *(Fase 2)* Saat stock opname disimpan, `products.stock` disesuaikan LANGSUNG ke nilai `physical_stock` (bukan ditambah/dikurangi), dan tetap dibungkus `DB::transaction()`.
+8. *(Fase 3)* Setiap pembelian yang statusnya belum lunas WAJIB tercatat sebagai utang di `supplier_debts` — status pembayaran dihitung dari total dibayar vs total transaksi, jangan hardcode boolean lunas/belum tanpa dasar angka.
+9. *(Fase 3)* Setiap user baru yang dibuat lewat modul manajemen user WAJIB melalui Form Request dengan validasi role yang valid (admin/kasir) — jangan biarkan role diinput bebas dari form.
 
 ## Perintah yang Sering Dipakai
 ```bash

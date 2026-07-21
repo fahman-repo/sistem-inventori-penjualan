@@ -32,6 +32,25 @@
                                 <input type="date" class="form-control" id="purchase_date" name="purchase_date" value="{{ date('Y-m-d') }}" required>
                             </div>
 
+                            <div class="form-group">
+                                <label>Status Pembayaran</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_status" id="payment_cash" value="cash" checked>
+                                    <label class="form-check-label" for="payment_cash">
+                                        <i class="fa fa-money text-success"></i> Cash (Lunas)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_status" id="payment_credit" value="credit">
+                                    <label class="form-check-label" for="payment_credit">
+                                        <i class="fa fa-credit-card text-warning"></i> Credit (Utang)
+                                    </label>
+                                </div>
+                                @error('payment_status')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <input type="hidden" id="products-data" value="{{ $products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'buy_price' => $p->buy_price, 'unit' => $p->unit, 'stock' => $p->stock])->toJson() }}">
 
                             <hr>

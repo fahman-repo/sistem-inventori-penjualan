@@ -13,6 +13,7 @@ class Supplier extends Model
     protected $fillable = [
         'name',
         'phone',
+        'email',
         'address',
     ];
 
@@ -22,5 +23,13 @@ class Supplier extends Model
     public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
+    }
+
+    /**
+     * Utang-utang ke supplier ini.
+     */
+    public function supplierDebts(): HasMany
+    {
+        return $this->hasMany(SupplierDebt::class);
     }
 }

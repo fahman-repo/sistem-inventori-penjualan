@@ -24,3 +24,14 @@ Homestead.yaml
 Thumbs.db
 .claude
 .vscode
+.vite.config.js
+.tailwind.config.js
+phpunit.xml
+package-lock.json
+package.json
+postcss.config.js
+artisan
+webpack.mix.js
+.editorconfig
+.ua
+

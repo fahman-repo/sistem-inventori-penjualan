@@ -148,8 +148,6 @@ suppliers 1---N purchases (opsional)
 
 purchases 1---N purchase_items N---1 products
 sales     1---N sale_items     N---1 products
-users     1---N stock_opnames
-stock_opnames 1---N stock_opname_items N---1 products
 ```
 
 ## 9. activity_logs *(Fase 2 — Audit Trail)*
@@ -206,6 +204,58 @@ Relasi:
 
 ---
 
+## 12. supplier_debts *(Fase 3 — utang ke supplier)*
+
+| Kolom        | Tipe                                  | Keterangan                                    |
+|--------------|------------------------------------------|--------------------------------------------------|
+| id           | bigIncrements                            | PK                                                 |
+| purchase_id  | foreignId → purchases.id, cascade        | utang muncul dari transaksi pembelian ini          |
+| supplier_id  | foreignId → suppliers.id                 |                                                    |
+| total_amount | decimal(14,2)                            | total utang (biasanya = purchases.total)           |
+| paid_amount  | decimal(14,2), default 0                 | total yang sudah dibayar                           |
+| due_date     | date, nullable                            | jatuh tempo                                        |
+| status       | enum('unpaid','partial','paid'), default 'unpaid' | dihitung ulang tiap kali ada pembayaran |
+| timestamps   | -                                          |                                                    |
+
+Relasi:
+- `belongsTo(Purchase::class)`
+- `belongsTo(Supplier::class)`
+- `hasMany(SupplierDebtPayment::class)`
+
+---
+
+## 13. supplier_debt_payments *(Fase 3 — riwayat cicilan pembayaran utang)*
+
+| Kolom            | Tipe                                    | Keterangan          |
+|-------------------|--------------------------------------------|-----------------------|
+| id                | bigIncrements                               | PK                     |
+| supplier_debt_id  | foreignId → supplier_debts.id, cascade      |                        |
+| user_id           | foreignId → users.id                        | siapa yang mencatat pembayaran |
+| amount            | decimal(14,2)                               | jumlah dibayar kali ini |
+| payment_date      | date                                          |                        |
+| notes             | text, nullable                              |                        |
+| timestamps        | -                                             |                        |
+
+Relasi:
+- `belongsTo(SupplierDebt::class)`
+- `belongsTo(User::class)`
+
+---
+
+## Perubahan pada tabel yang sudah ada (Fase 3)
+
+**suppliers** — aktifkan penuh (sebelumnya opsional di Fase 1), tambah kolom:
+| Kolom   | Tipe            | Keterangan   |
+|---------|-----------------|--------------|
+| email   | string, nullable |             |
+
+**purchases** — tambah kolom:
+| Kolom          | Tipe                                       | Keterangan                               |
+|-----------------|-----------------------------------------------|---------------------------------------------|
+| payment_status  | enum('cash','credit'), default 'cash'         | cash = lunas langsung, credit = jadi utang    |
+
+---
+
 ## Urutan Migration yang Disarankan
 1. `categories`
 2. `products` (bergantung ke categories)
@@ -219,6 +269,11 @@ Relasi:
 8. `activity_logs` (bergantung ke users)
 9. `stock_opnames` (bergantung ke users)
 10. `stock_opname_items` (bergantung ke stock_opnames, products)
+
+**Fase 3:**
+11. migration alter: aktifkan tabel `suppliers` penuh (tambah kolom `email`), alter `purchases` tambah `payment_status`
+12. `supplier_debts` (bergantung ke purchases, suppliers)
+13. `supplier_debt_payments` (bergantung ke supplier_debts, users)
 
 ## Contoh Seeder Awal (untuk testing)
 - 3-5 kategori (Makanan, Minuman, ATK, dll)

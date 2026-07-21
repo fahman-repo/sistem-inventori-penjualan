@@ -358,6 +358,11 @@ return [
                     'url' => 'admin/products',
                     'icon' => 'fas fa-fw fa-box',
                 ],
+                [
+                    'text' => 'Supplier',
+                    'url' => 'admin/suppliers',
+                    'icon' => 'fas fa-fw fa-truck',
+                ],
             ],
         ],
         // Transaksi Pembelian - Admin only
@@ -405,6 +410,18 @@ return [
             'text' => 'Activity Log',
             'url' => 'admin/activity-logs',
             'icon' => 'fas fa-fw fa-history',
+            'can' => 'view-master-data',
+        ],
+        [
+            'text' => 'Manajemen User',
+            'url' => 'admin/users',
+            'icon' => 'fas fa-fw fa-users-cog',
+            'can' => 'view-master-data',
+        ],
+        [
+            'text' => 'Utang Supplier',
+            'url' => 'admin/supplier-debts',
+            'icon' => 'fas fa-fw fa-hand-holding-usd',
             'can' => 'view-master-data',
         ],
     ],

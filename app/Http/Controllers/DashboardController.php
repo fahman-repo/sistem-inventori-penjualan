@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\SupplierDebt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -41,6 +42,20 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // Upcoming/overdue supplier debts (unpaid/partial, due past or within 7 days)
+        $dueDebts = SupplierDebt::with('supplier')
+            ->whereIn('status', ['unpaid', 'partial'])
+            ->where(function ($query) {
+                $query->where('due_date', '<=', now()->addDays(7))
+                    ->orWhereNull('due_date');
+            })
+            ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END, due_date ASC')
+            ->limit(10)
+            ->get();
+
+        $totalDueDebts = $dueDebts->count();
+        $totalDueAmount = $dueDebts->sum('remaining_amount');
+
         return view('dashboard', compact(
             'totalProducts',
             'totalStock',
@@ -50,7 +65,10 @@ class DashboardController extends Controller
             'todaySalesCount',
             'chartData',
             'profitData',
-            'recentSales'
+            'recentSales',
+            'dueDebts',
+            'totalDueDebts',
+            'totalDueAmount'
         ));
     }
 
