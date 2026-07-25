@@ -110,7 +110,7 @@ class PurchaseController extends Controller
                     'supplier_id'  => $validated['supplier_id'],
                     'total_amount' => $total,
                     'paid_amount'  => 0,
-                    'due_date'     => $validated['due_date'] ?? null,
+                    'due_date'     => \Carbon\Carbon::parse($validated['purchase_date'])->addDays(60),
                     'status'       => 'unpaid',
                 ]);
             }
@@ -129,6 +129,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase): View
     {
+        $purchase->load('supplierDebt');
         return view('purchases.show', compact('purchase'));
     }
 
@@ -137,6 +138,7 @@ class PurchaseController extends Controller
      */
     public function edit(Purchase $purchase): View
     {
+        $purchase->load('supplierDebt');
         $products = Product::where('stock', '>', 0)->get();
         $suppliers = Supplier::orderBy('name')->get();
         $taxes = Tax::where('is_active', true)->get();
@@ -189,6 +191,14 @@ class PurchaseController extends Controller
                     'quantity' => $item['quantity'],
                     'buy_price' => $item['buy_price'],
                     'subtotal' => $item['quantity'] * $item['buy_price'],
+                ]);
+            }
+
+            // Sync SupplierDebt if payment is credit
+            if ($purchase->supplierDebt && ($validated['payment_status'] ?? $purchase->payment_status) === 'credit') {
+                $purchase->supplierDebt->update([
+                    'total_amount' => $total,
+                    'due_date' => \Carbon\Carbon::parse($validated['purchase_date'])->addDays(60),
                 ]);
             }
         });

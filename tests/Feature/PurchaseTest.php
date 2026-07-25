@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\SupplierDebt;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -312,5 +313,120 @@ class PurchaseTest extends TestCase
             ]);
 
         $response->assertStatus(403);
+    }
+
+    // ==================== CREDIT PURCHASE & DUE DATE TESTS ====================
+
+    public function test_credit_purchase_auto_sets_due_date_to_60_days(): void
+    {
+        $product = $this->createTestProduct('PUR-CREDIT-001', 50);
+
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/purchases', [
+                'supplier_id' => $this->supplier->id,
+                'purchase_date' => '2026-07-25',
+                'payment_status' => 'credit',
+                'items' => [
+                    [
+                        'product_id' => $product->id,
+                        'quantity' => 10,
+                        'buy_price' => 2500,
+                    ],
+                ],
+            ]);
+
+        $response->assertRedirect('/admin/purchases')
+            ->assertSessionHas('success');
+
+        $purchase = \App\Models\Purchase::latest()->first();
+
+        $this->assertDatabaseHas('supplier_debts', [
+            'purchase_id' => $purchase->id,
+            'supplier_id' => $this->supplier->id,
+            'total_amount' => 25000,
+            'paid_amount' => 0,
+            'status' => 'unpaid',
+        ]);
+
+        $debt = SupplierDebt::where('purchase_id', $purchase->id)->first();
+        $this->assertNotNull($debt->due_date);
+        $this->assertEquals('2026-09-23', $debt->due_date->format('Y-m-d'));
+    }
+
+    public function test_cash_purchase_does_not_create_supplier_debt(): void
+    {
+        $product = $this->createTestProduct('PUR-CASH-001', 50);
+
+        $response = $this->actingAs($this->admin)
+            ->post('/admin/purchases', [
+                'supplier_id' => $this->supplier->id,
+                'purchase_date' => '2026-07-25',
+                'payment_status' => 'cash',
+                'items' => [
+                    [
+                        'product_id' => $product->id,
+                        'quantity' => 10,
+                        'buy_price' => 2500,
+                    ],
+                ],
+            ]);
+
+        $response->assertRedirect('/admin/purchases');
+
+        $purchase = \App\Models\Purchase::latest()->first();
+
+        $this->assertNull($purchase->supplierDebt);
+    }
+
+    public function test_due_date_displayed_on_supplier_debts_index(): void
+    {
+        $product = $this->createTestProduct('PUR-DUE-IDX', 50);
+
+        $this->actingAs($this->admin)
+            ->post('/admin/purchases', [
+                'supplier_id' => $this->supplier->id,
+                'purchase_date' => '2026-07-25',
+                'payment_status' => 'credit',
+                'items' => [
+                    [
+                        'product_id' => $product->id,
+                        'quantity' => 10,
+                        'buy_price' => 2500,
+                    ],
+                ],
+            ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get('/admin/supplier-debts');
+
+        $response->assertStatus(200)
+            ->assertSee('23/09/2026');
+    }
+
+    public function test_due_date_displayed_on_supplier_debt_detail(): void
+    {
+        $product = $this->createTestProduct('PUR-DUE-DTL', 50);
+
+        $this->actingAs($this->admin)
+            ->post('/admin/purchases', [
+                'supplier_id' => $this->supplier->id,
+                'purchase_date' => '2026-07-25',
+                'payment_status' => 'credit',
+                'items' => [
+                    [
+                        'product_id' => $product->id,
+                        'quantity' => 10,
+                        'buy_price' => 2500,
+                    ],
+                ],
+            ]);
+
+        $debt = SupplierDebt::latest()->first();
+
+        $response = $this->actingAs($this->admin)
+            ->get("/admin/supplier-debts/{$debt->id}");
+
+        $response->assertStatus(200)
+            ->assertSee('23/09/2026');
     }
 }

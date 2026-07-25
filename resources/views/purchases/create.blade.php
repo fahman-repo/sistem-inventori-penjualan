@@ -51,6 +51,11 @@
                                 @enderror
                             </div>
 
+                            <div id="due-date-info" class="alert alert-info" style="display:none;">
+                                <i class="fa fa-calendar"></i> <strong>Jatuh Tempo:</strong> <span id="due-date-display">-</span>
+                                <small class="text-muted">(Tanggal pembelian + 60 hari)</small>
+                            </div>
+
                             <input type="hidden" id="products-data" value="{{ $products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'buy_price' => $p->buy_price, 'unit' => $p->unit, 'stock' => $p->stock])->toJson() }}">
 
                             <hr>
@@ -271,6 +276,24 @@ $(document).ready(function() {
     $(document).on('change', '#tax-select', function() {
         calculateTax();
     });
+
+    function updateDueDateDisplay() {
+        const purchaseDate = $('#purchase_date').val();
+        if ($('#payment_credit').is(':checked') && purchaseDate) {
+            const d = new Date(purchaseDate);
+            d.setDate(d.getDate() + 60);
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            $('#due-date-display').text(dd + '/' + mm + '/' + yyyy);
+            $('#due-date-info').show();
+        } else {
+            $('#due-date-info').hide();
+        }
+    }
+
+    $('input[name="payment_status"]').on('change', updateDueDateDisplay);
+    $('#purchase_date').on('change', updateDueDateDisplay);
 });
 </script>
 @endsection

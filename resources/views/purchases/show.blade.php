@@ -41,6 +41,18 @@
                                     @endif
                                 </td>
                             </tr>
+                            @if($purchase->payment_status == 'credit')
+                            <tr>
+                                <th>Jatuh Tempo</th>
+                                <td>
+                                    @if($purchase->supplierDebt && $purchase->supplierDebt->due_date)
+                                        <i class="fa fa-calendar text-info"></i> {{ $purchase->supplierDebt->due_date->format('d/m/Y') }}
+                                    @else
+                                        <span class="text-muted">Tidak ada data utang</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endif
                             <tr>
                                 <th>Subtotal</th>
                                 <td>Rp {{ number_format($purchase->total, 2, ',', '.') }}</td>
