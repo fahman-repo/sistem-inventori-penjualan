@@ -100,21 +100,21 @@
 
         /* ===== META INFO ===== */
         .meta-section {
-            display: table;
-            table-layout: fixed;
-            width: calc(100% + 24px);
-            margin-left: -12px;
-            margin-right: -12px;
+            width: 100%;
             margin-bottom: 22px;
             border-spacing: 12px 0;
         }
 
+        .meta-section td {
+            width: 50%;
+            padding: 0;
+            vertical-align: top;
+        }
+
         .meta-box {
-            display: table-cell;
             padding: 14px 16px;
             border: 1px solid #dfe6e9;
             background: #f8f9fa;
-            vertical-align: top;
         }
 
         .meta-box h3 {
@@ -197,7 +197,7 @@
             vertical-align: top;
         }
 
-        .items-table tbody tr:nth-child(even) {
+        .items-table tbody tr.even-row {
             background: #fafbfc;
         }
 
@@ -213,7 +213,6 @@
         .items-table tbody td.price,
         .items-table tbody td.subtotal {
             text-align: right;
-            font-variant-numeric: tabular-nums;
         }
 
         .items-table tbody td.subtotal {
@@ -232,16 +231,28 @@
 
         /* ===== SUMMARY ===== */
         .summary-section {
-            overflow: hidden;
             margin-top: 30px;
             margin-bottom: 25px;
             border-top: 2px solid #2d3436;
             padding-top: 20px;
         }
 
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .summary-table td {
+            vertical-align: top;
+        }
+
+        .summary-table .spacer-cell {
+            width: 60%;
+        }
+
         .summary-box {
-            float: right;
             width: 320px;
+            margin-left: auto;
         }
 
         .summary-box table {
@@ -255,28 +266,28 @@
             border-bottom: 1px solid #ecf0f1;
         }
 
-        .summary-box table td:first-child {
+        .summary-box table td.lbl {
             color: #636e72;
             text-align: left;
         }
 
-        .summary-box table td:last-child {
+        .summary-box table td.val {
             font-weight: 600;
             text-align: right;
-            font-variant-numeric: tabular-nums;
         }
 
-        .summary-box .tax-detail td {
+        .summary-box table tr.tax-detail td.lbl {
             font-size: 11px;
             color: #636e72;
         }
 
-        .summary-box .tax-detail td:last-child {
+        .summary-box table tr.tax-detail td.val {
+            font-size: 11px;
             color: #636e72;
             font-weight: 400;
         }
 
-        .summary-box .total-row td {
+        .summary-box table tr.total-row td {
             border-bottom: none;
             border-top: 2px solid #2d3436;
             padding-top: 12px;
@@ -355,24 +366,30 @@
         </div>
 
         <!-- META INFO -->
-        <div class="meta-section">
-            <div class="meta-box">
-                <h3>Diterbitkan Oleh</h3>
-                <p><strong>Toko ABC</strong></p>
-                <p>Jl. Contoh No. 123</p>
-                <p>Kota - Kode Pos</p>
-                <p>Telp: 0812-3456-7890</p>
-            </div>
-            <div class="meta-box">
-                <h3>Detail Transaksi</h3>
-                <p><strong>Kasir:</strong> {{ $sale->user->name }}</p>
-                <p><strong>Tanggal:</strong> {{ $sale->sale_date->format('d/m/Y') }}</p>
-                <p><strong>Status:</strong> <span class="highlight">LUNAS</span></p>
-                @if($sale->notes)
-                    <p><strong>Catatan:</strong> {{ $sale->notes }}</p>
-                @endif
-            </div>
-        </div>
+        <table class="meta-section">
+            <tr>
+                <td>
+                    <div class="meta-box">
+                        <h3>Diterbitkan Oleh</h3>
+                        <p><strong>Toko ABC</strong></p>
+                        <p>Jl. Contoh No. 123</p>
+                        <p>Kota - Kode Pos</p>
+                        <p>Telp: 0812-3456-7890</p>
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-box">
+                        <h3>Detail Transaksi</h3>
+                        <p><strong>Kasir:</strong> {{ $sale->user->name }}</p>
+                        <p><strong>Tanggal:</strong> {{ $sale->sale_date->format('d/m/Y') }}</p>
+                        <p><strong>Status:</strong> <span class="highlight">LUNAS</span></p>
+                        @if($sale->notes)
+                            <p><strong>Catatan:</strong> {{ $sale->notes }}</p>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+        </table>
 
         <!-- ITEMS TABLE -->
         <div class="items-section">
@@ -390,7 +407,7 @@
                 </thead>
                 <tbody>
                     @foreach($sale->items as $index => $item)
-                        <tr>
+                        <tr class="{{ $loop->even ? 'even-row' : '' }}">
                             <td class="num">{{ $index + 1 }}</td>
                             <td>{{ $item->product->sku }}</td>
                             <td>
@@ -407,29 +424,36 @@
 
         <!-- SUMMARY -->
         <div class="summary-section">
-            <div class="summary-box">
-                <table>
-                    <tr>
-                        <td>Subtotal ({{ $sale->items->sum('quantity') }} item)</td>
-                        <td>Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
-                    </tr>
-                    @if($sale->tax)
-                        <tr class="tax-detail">
-                            <td>{{ $sale->tax->name }} ({{ rtrim(rtrim(number_format($sale->tax->rate, 2, ',', '.'), '0'), ',') }}%)</td>
-                            <td>Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}</td>
-                        </tr>
-                    @else
-                        <tr class="tax-detail">
-                            <td>Pajak</td>
-                            <td>Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}</td>
-                        </tr>
-                    @endif
-                    <tr class="total-row">
-                        <td>Grand Total</td>
-                        <td>Rp {{ number_format($sale->total + $sale->tax_amount, 0, ',', '.') }}</td>
-                    </tr>
-                </table>
-            </div>
+            <table class="summary-table">
+                <tr>
+                    <td class="spacer-cell"></td>
+                    <td>
+                        <div class="summary-box">
+                            <table>
+                                <tr>
+                                    <td class="lbl">Subtotal ({{ $sale->items->sum('quantity') }} item)</td>
+                                    <td class="val">Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
+                                </tr>
+                                @if($sale->tax)
+                                    <tr class="tax-detail">
+                                        <td class="lbl">{{ $sale->tax->name }} ({{ rtrim(rtrim(number_format($sale->tax->rate, 2, ',', '.'), '0'), ',') }}%)</td>
+                                        <td class="val">Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}</td>
+                                    </tr>
+                                @else
+                                    <tr class="tax-detail">
+                                        <td class="lbl">Pajak</td>
+                                        <td class="val">Rp {{ number_format($sale->tax_amount, 0, ',', '.') }}</td>
+                                    </tr>
+                                @endif
+                                <tr class="total-row">
+                                    <td class="lbl">Grand Total</td>
+                                    <td class="val">Rp {{ number_format($sale->total + $sale->tax_amount, 0, ',', '.') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- NOTES -->
