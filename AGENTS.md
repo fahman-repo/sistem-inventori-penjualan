@@ -3,7 +3,7 @@
 ## Deskripsi Singkat
 Aplikasi web untuk mengelola stok barang, transaksi pembelian, dan transaksi
 penjualan pada sebuah toko/usaha kecil. Dibangun sebagai proyek belajar
-"vibe coding" menggunakan Claude Code.
+"vibe coding" menggunakan AI Coding Agent (Claude Code, Codex, Kilo Code, Opencode etc).
 
 ## Tech Stack
 - Laravel 11, PHP 8.2+
@@ -11,7 +11,8 @@ penjualan pada sebuah toko/usaha kecil. Dibangun sebagai proyek belajar
 - jQuery untuk interaktivitas ringan seperti form dinamis (tambah/hapus item transaksi) — AdminLTE 3 sudah menyertakan jQuery, jadi tidak perlu Alpine.js
 - MySQL (dijalankan via XAMPP)
 - Laravel Breeze untuk autentikasi (khusus logic auth; tampilan login/register akan disesuaikan ke style AdminLTE)
-- barryvdh/laravel-dompdf untuk cetak invoice/nota (opsional, hari ke-6)
+- barryvdh/laravel-dompdf untuk cetak invoice/nota
+- maatwebsite/excel untuk export laporan ke Excel (.xlsx)
 - Chart.js untuk grafik laporan (AdminLTE 3 sudah punya contoh integrasi Chart.js bawaan)
 
 ## Setup AdminLTE 3
@@ -43,7 +44,9 @@ php artisan adminlte:install --only=auth_views   # sesuaikan tampilan Breeze ke 
 app/Models/
 app/Http/Controllers/
 app/Http/Requests/
-app/Http/Middleware/          -> untuk role check (admin/kasir)
+app/Http/Middleware/          -> CheckRole, HandleDarkMode
+app/Services/                 -> ActivityLogger
+app/Exports/                  -> SalesReportExport, SupplierDebtExport
 database/migrations/
 database/seeders/
 resources/views/{module}/index.blade.php
@@ -53,7 +56,7 @@ routes/web.php
 ```
 
 ## Role User
-- **admin**: akses penuh ke semua modul (master data, pembelian, penjualan, laporan, kelola user, kelola supplier & utang).
+- **admin**: akses penuh ke semua modul (master data, pembelian, penjualan, laporan, kelola user, kelola supplier & utang, kelola pajak).
 - **kasir**: hanya bisa akses modul penjualan (buat transaksi baru, lihat riwayat penjualan miliknya).
 
 Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permission` jika ingin lebih rapi — tapi untuk scope 7 hari, middleware sederhana dengan kolom `role` di tabel `users` sudah cukup.
@@ -64,10 +67,12 @@ Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permi
 3. Setiap transaksi penjualan otomatis MENGURANGI stok produk terkait.
 4. Harga jual & harga beli yang tersimpan di `sale_items`/`purchase_items` adalah harga SAAT transaksi terjadi (bukan mengambil harga terbaru dari tabel produk), supaya riwayat transaksi tidak berubah jika harga produk di-update kemudian.
 5. Nomor transaksi (invoice number) harus unik, format bebas tapi konsisten, contoh: `INV-20260712-0001`.
-6. *(Fase 2)* Setiap create/update/delete pada Produk, Pembelian, Penjualan WAJIB dicatat lewat `ActivityLogger::log()` — lihat `app/Services/ActivityLogger.php`.
-7. *(Fase 2)* Saat stock opname disimpan, `products.stock` disesuaikan LANGSUNG ke nilai `physical_stock` (bukan ditambah/dikurangi), dan tetap dibungkus `DB::transaction()`.
-8. *(Fase 3)* Setiap pembelian yang statusnya belum lunas WAJIB tercatat sebagai utang di `supplier_debts` — status pembayaran dihitung dari total dibayar vs total transaksi, jangan hardcode boolean lunas/belum tanpa dasar angka.
-9. *(Fase 3)* Setiap user baru yang dibuat lewat modul manajemen user WAJIB melalui Form Request dengan validasi role yang valid (admin/kasir) — jangan biarkan role diinput bebas dari form.
+6. Setiap create/update/delete pada Produk, Pembelian, Penjualan WAJIB dicatat lewat `ActivityLogger::log()` — lihat `app/Services/ActivityLogger.php`.
+7. Saat stock opname disimpan, `products.stock` disesuaikan LANGSUNG ke nilai `physical_stock` (bukan ditambah/dikurangi), dan tetap dibungkus `DB::transaction()`.
+8. Setiap pembelian yang statusnya belum lunas WAJIB tercatat sebagai utang di `supplier_debts` — status pembayaran dihitung dari total dibayar vs total transaksi, jangan hardcode boolean lunas/belum tanpa dasar angka.
+9. Setiap user baru yang dibuat lewat modul manajemen user WAJIB melalui Form Request dengan validasi role yang valid (admin/kasir) — jangan biarkan role diinput bebas dari form.
+10. Pajak bersifat opsional per transaksi. Jika dipilih, `tax_amount` dihitung dari `subtotal × rate / 100` dan disimpan di header transaksi bersama `tax_id`.
+11. `buy_price` wajib disimpan di `sale_items` saat transaksi penjualan (diambil dari `products.buy_price` saat itu) untuk menjaga akurasi laporan laba kotor — jangan ambil harga terbaru saat menampilkan laporan.
 
 ## Perintah yang Sering Dipakai
 ```bash
@@ -83,5 +88,5 @@ php artisan adminlte:install --only=auth_views
 ## Catatan untuk Claude Code
 - Selalu baca `SCHEMA.md` sebelum membuat migration/model baru.
 - Selalu baca `PRD.md` sebelum membuat fitur baru agar sesuai alur bisnis.
-- Cek `TASKS.md` (fase 1) dan `TASKS_PHASE2.md` (fase 2) untuk tahu progres dan task yang sedang dikerjakan.
-- Jangan generate seluruh aplikasi sekaligus dalam satu prompt — ikuti breakdown per task di `TASKS.md` / `TASKS_PHASE2.md`.
+- Cek `TASKS.md` (fase 1) dan `TASKS_PHASE2.md` (fase 2) dan `TASKS_PHASE3.md` (fase 3) untuk tahu progres dan task yang sedang dikerjakan.
+- Jangan generate seluruh aplikasi sekaligus dalam satu prompt — ikuti breakdown per task di `TASKS.md` / `TASKS_PHASE2.md` / `TASKS_PHASE3.md`.

@@ -29,36 +29,43 @@ distro, dsb), lengkap dengan laporan dasar.
 
 ### 3.4 Transaksi Pembelian (Stok Masuk)
 - Form input pembelian: pilih produk (bisa lebih dari 1 item per transaksi), jumlah, harga beli saat itu.
-- Form dinamis: tombol "tambah item" dan "hapus item" (pakai Alpine.js).
+- Pilih supplier dan status pembayaran (cash/credit).
+- Pilih pajak opsional dari daftar pajak yang sudah dikelola (lihat 3.12).
+- Form dinamis: tombol "tambah item" dan "hapus item" (pakai jQuery).
 - Saat disimpan:
   - Data header (`purchases`) dan detail (`purchase_items`) tersimpan dalam satu `DB::transaction()`.
   - Stok produk otomatis bertambah sesuai jumlah yang dibeli.
+  - Jika dipilih pajak, `tax_amount` dihitung dari subtotal × rate dan tersimpan di header.
+  - Jika status pembayaran `credit`, sistem otomatis membuat record di `supplier_debts`.
 - Riwayat pembelian bisa dilihat & difilter per tanggal.
 - Detail 1 transaksi pembelian bisa dilihat kembali (invoice pembelian).
 
 ### 3.5 Transaksi Penjualan (Stok Keluar)
 - Form input penjualan: pilih produk, jumlah, harga jual otomatis terisi (bisa diedit jika perlu diskon).
+- Pilih pajak opsional dari daftar pajak yang sudah dikelola (lihat 3.12).
 - Form dinamis tambah/hapus item.
+- `buy_price` produk saat transaksi otomatis disimpan di `sale_items` untuk perhitungan laba kotor.
 - Validasi: jumlah yang dijual tidak boleh melebihi stok tersedia (dicek per item saat submit).
 - Saat disimpan:
   - Data header (`sales`) dan detail (`sale_items`) tersimpan dalam satu `DB::transaction()`.
   - Stok produk otomatis berkurang.
   - Total transaksi dihitung otomatis (jumlah × harga jual per item, dijumlah semua item).
+  - Jika dipilih pajak, `tax_amount` dihitung dari subtotal × rate dan tersimpan di header.
 - Kasir hanya bisa melihat riwayat transaksi yang dia buat sendiri; admin bisa melihat semua.
 - Cetak nota/invoice penjualan (PDF, opsional hari ke-6).
 
 ### 3.6 Laporan
 - **Laporan Stok**: daftar produk dengan status (aman/menipis/habis), bisa export atau minimal tampil di tabel.
-- **Laporan Penjualan**: total penjualan per hari/bulan, filter rentang tanggal, grafik batang/garis (Chart.js) menampilkan tren penjualan.
-- **Laporan Laba Kotor** (opsional jika waktu cukup): selisih harga jual dan harga beli dari data `sale_items` yang tersimpan.
+- **Laporan Penjualan**: total penjualan per hari/bulan, filter rentang tanggal, grafik batang/garis (Chart.js) menampilkan tren penjualan. Export ke Excel (.xlsx) tersedia.
+- **Laporan Laba Kotor**: selisih harga jual dan harga beli dari data `sale_items` yang tersimpan (menggunakan kolom `buy_price` yang dicatat saat transaksi), filter per tanggal dan kategori, dilengkapi grafik tren laba.
 
-### 3.8 Activity Log (Fase 2)
+### 3.8 Activity Log
 - Setiap aksi create/update/delete pada modul Produk, Pembelian, dan Penjualan otomatis tercatat: siapa, kapan, aksi apa, data sebelum & sesudah.
 - Hanya admin yang bisa melihat halaman riwayat activity log.
 - Filter berdasarkan user dan rentang tanggal.
 - Tujuan: transparansi dan audit trail untuk sistem yang melibatkan uang & stok.
 
-### 3.9 Stock Opname (Fase 2)
+### 3.9 Stock Opname
 - Admin/kasir yang ditugaskan bisa melakukan pencocokan stok fisik vs stok sistem secara berkala.
 - Saat opname dibuat: sistem menampilkan semua produk beserta stok sistem saat ini, user menginput hasil hitung fisik per produk.
 - Sistem menghitung selisih otomatis (physical_stock - system_stock).
@@ -66,22 +73,37 @@ distro, dsb), lengkap dengan laporan dasar.
 - Setiap opname tercatat di activity log (aksi 'stock_opname').
 - Riwayat opname bisa dilihat kembali beserta detail selisih tiap produk (selisih negatif = stok hilang, ditandai warna berbeda).
 
-### 3.10 Manajemen User (Fase 3)
+### 3.10 Manajemen User
 - Admin bisa CRUD user: tambah kasir baru, edit data user, nonaktifkan/hapus user.
 - Form tambah/edit user memilih role (admin/kasir) lewat dropdown yang tervalidasi (bukan input bebas).
 - Admin tidak bisa menghapus akun dirinya sendiri (guard sederhana agar tidak ada admin yang terkunci dari sistem).
 - Riwayat siapa membuat/mengubah user tercatat lewat activity log yang sudah ada di Fase 2.
 
-### 3.11 Supplier & Utang (Fase 3)
+### 3.11 Supplier & Utang
 - Modul supplier penuh: CRUD data supplier (nama, telepon, alamat, email).
 - Setiap transaksi pembelian punya status pembayaran: `cash` (lunas langsung) atau `credit` (menjadi utang).
 - Jika `credit`: sistem otomatis membuat record di `supplier_debts` sebesar total pembelian, dengan status awal `unpaid`.
 - Admin bisa mencatat pembayaran cicilan utang (`supplier_debt_payments`) — status utang otomatis berubah jadi `partial` atau `paid` tergantung total yang sudah dibayar vs total utang.
 - Halaman daftar utang: filter berdasarkan status (unpaid/partial/paid) dan supplier, tampilkan sisa utang & jatuh tempo.
 - Riwayat pembelian per supplier bisa dilihat dari halaman detail supplier.
+- Export daftar utang supplier ke Excel (.xlsx) mengikuti filter aktif (status, supplier).
+
+### 3.12 Manajemen Pajak
+- CRUD pajak: nama pajak (misal: PPN, PPh), tarif dalam persen, status aktif/nonaktif.
+- Pajak bisa dipilih saat membuat transaksi pembelian atau penjualan (opsional per transaksi).
+- Jika dipilih, `tax_amount` dihitung otomatis dari subtotal transaksi × tarif pajak.
+- Data pajak tersimpan di header transaksi (`purchases.tax_id`, `tax_amount` dan `sales.tax_id`, `tax_amount`).
+- Hanya admin yang bisa mengelola data pajak.
+- Pajak yang masih digunakan dalam transaksi tidak bisa dihapus.
+
+### 3.13 Dark Mode
+- Toggle dark/light mode tersedia di navbar AdminLTE.
+- Preferensi tersimpan di session dan diterapkan via middleware `HandleDarkMode`.
 
 ### 3.7 Dashboard
-- Ringkasan cepat saat login: total produk, produk stok menipis, total penjualan hari ini, grafik penjualan 7 hari terakhir.
+- Ringkasan cepat saat login: total produk, produk stok menipis, total penjualan hari ini, grafik penjualan 7 hari terakhir, grafik laba 7 hari terakhir.
+- Notifikasi stok menipis di navbar (bell icon, AJAX) menampilkan daftar produk dengan stok ≤ min_stock.
+- Widget utang supplier yang jatuh tempo (unpaid/partial, due dalam 7 hari ke depan).
 
 ## 4. Alur Bisnis Kunci
 
