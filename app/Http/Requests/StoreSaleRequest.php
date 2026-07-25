@@ -30,6 +30,7 @@ class StoreSaleRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.sell_price' => ['required', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
+            'tax_id' => ['nullable', 'exists:taxes,id'],
         ];
     }
 

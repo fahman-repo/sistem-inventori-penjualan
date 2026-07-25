@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\SupplierDebt;
+use App\Models\Tax;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,8 +46,9 @@ class PurchaseController extends Controller
     {
         $products = Product::where('stock', '>', 0)->get();
         $suppliers = Supplier::orderBy('name')->get();
+        $taxes = Tax::where('is_active', true)->get();
 
-        return view('purchases.create', compact('products', 'suppliers'));
+        return view('purchases.create', compact('products', 'suppliers', 'taxes'));
     }
 
     /**
@@ -62,17 +64,28 @@ class PurchaseController extends Controller
             $total += $item['quantity'] * $item['buy_price'];
         }
 
+        // Calculate tax
+        $taxAmount = 0;
+        if (!empty($validated['tax_id'])) {
+            $tax = Tax::find($validated['tax_id']);
+            if ($tax) {
+                $taxAmount = $total * ($tax->rate / 100);
+            }
+        }
+
         // Generate unique invoice number
         $invoiceNumber = $this->generateInvoiceNumber();
 
         // Use DB::transaction for data integrity
-        $purchase = DB::transaction(function () use ($validated, $total, $invoiceNumber) {
+        $purchase = DB::transaction(function () use ($validated, $total, $invoiceNumber, $taxAmount) {
             $purchase = Purchase::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => auth()->id(),
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'purchase_date' => $validated['purchase_date'],
                 'total' => $total,
+                'tax_id' => $validated['tax_id'] ?? null,
+                'tax_amount' => $taxAmount,
                 'notes' => $validated['notes'] ?? null,
                 'payment_status' => $validated['payment_status'] ?? 'cash',
             ]);
@@ -126,8 +139,9 @@ class PurchaseController extends Controller
     {
         $products = Product::where('stock', '>', 0)->get();
         $suppliers = Supplier::orderBy('name')->get();
+        $taxes = Tax::where('is_active', true)->get();
 
-        return view('purchases.edit', compact('purchase', 'products', 'suppliers'));
+        return view('purchases.edit', compact('purchase', 'products', 'suppliers', 'taxes'));
     }
 
     /**
@@ -143,7 +157,16 @@ class PurchaseController extends Controller
             $total += $item['quantity'] * $item['buy_price'];
         }
 
-        DB::transaction(function () use ($validated, $total, $purchase) {
+        // Calculate tax
+        $taxAmount = 0;
+        if (!empty($validated['tax_id'])) {
+            $tax = Tax::find($validated['tax_id']);
+            if ($tax) {
+                $taxAmount = $total * ($tax->rate / 100);
+            }
+        }
+
+        DB::transaction(function () use ($validated, $total, $purchase, $taxAmount) {
             // Delete old items
             $purchase->items()->delete();
 
@@ -153,6 +176,8 @@ class PurchaseController extends Controller
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'purchase_date' => $validated['purchase_date'],
                 'total' => $total,
+                'tax_id' => $validated['tax_id'] ?? null,
+                'tax_amount' => $taxAmount,
                 'notes' => $validated['notes'] ?? null,
                 'payment_status' => $validated['payment_status'] ?? $purchase->payment_status,
             ]);

@@ -363,6 +363,11 @@ return [
                     'url' => 'admin/suppliers',
                     'icon' => 'fas fa-fw fa-truck',
                 ],
+                [
+                    'text' => 'Pajak',
+                    'url' => 'admin/taxes',
+                    'icon' => 'fas fa-fw fa-percent',
+                ],
             ],
         ],
         // Transaksi Pembelian - Admin only

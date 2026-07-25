@@ -16,12 +16,15 @@ class Sale extends Model
         'user_id',
         'sale_date',
         'total',
+        'tax_id',
+        'tax_amount',
         'notes',
     ];
 
     protected $casts = [
         'sale_date' => 'date',
         'total' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
     ];
 
     /**
@@ -30,6 +33,14 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Pajak yang dikenakan pada penjualan ini.
+     */
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class);
     }
 
     /**

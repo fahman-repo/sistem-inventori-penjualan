@@ -80,7 +80,7 @@
                                     <td>{{ $loop->iteration + ($sales->currentPage() - 1) * $sales->perPage() }}</td>
                                     <td>{{ $sale->invoice_number }}</td>
                                     <td>{{ $sale->sale_date->format('d/m/Y') }}</td>
-                                    <td>Rp {{ number_format($sale->total, 2, ',', '.') }}</td>
+                                    <td>Rp {{ number_format($sale->total + $sale->tax_amount, 2, ',', '.') }}</td>
                                     <td>
                                         <span class="badge badge-success">Selesai</span>
                                     </td>

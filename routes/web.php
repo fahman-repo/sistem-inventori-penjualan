@@ -7,6 +7,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\SupplierDebtController;
+use App\Http\Controllers\TaxController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,6 +23,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('admin/products', ProductController::class);
     Route::resource('admin/purchases', PurchaseController::class);
     Route::resource('admin/suppliers', SupplierController::class);
+    Route::resource('admin/taxes', TaxController::class);
     Route::get('admin/supplier-debts', [SupplierDebtController::class, 'index'])->name('supplier-debts.index');
     Route::get('admin/supplier-debts/export', [SupplierDebtController::class, 'export'])->name('supplier-debts.export');
     Route::get('admin/supplier-debts/{supplierDebt}', [SupplierDebtController::class, 'show'])->name('supplier-debts.show');

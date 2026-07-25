@@ -53,7 +53,7 @@
             </form>
 
             <div class="table-responsive">
-                <table class="table table-bordered table-hover table-striped">
+                <table id="activity-logs-table" class="table table-bordered table-hover table-striped dataTable" style="width:100%">
                     <thead class="thead-dark">
                         <tr>
                             <th width="180">Waktu</th>
@@ -107,3 +107,11 @@
         </div>
     </div>
 @stop
+
+@section('js')
+<script>
+    $(document).ready(function() {
+        $('#activity-logs-table').DataTable();
+    });
+</script>
+@endsection

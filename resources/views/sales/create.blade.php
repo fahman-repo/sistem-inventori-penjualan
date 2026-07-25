@@ -74,8 +74,37 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Total</label>
-                                <p class="font-weight-bold">Rp <span id="total-amount">0</span></p>
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="use_tax">
+                                    <label class="custom-control-label" for="use_tax">Kena Pajak</label>
+                                </div>
+                            </div>
+
+                            <div id="tax-section" style="display:none;">
+                                <div class="form-group">
+                                    <label for="tax-select">Pilih Pajak</label>
+                                    <select name="tax_id" id="tax-select" class="form-control">
+                                        <option value="">-- Pilih Pajak --</option>
+                                        @foreach($taxes as $tax)
+                                            <option value="{{ $tax->id }}" data-rate="{{ $tax->rate }}">{{ $tax->name }} ({{ $tax->rate }}%)</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="tax_amount" id="tax-amount-input" value="0">
+
+                            <div class="form-group">
+                                <label>Subtotal</label>
+                                <p class="font-weight-bold">Rp <span id="subtotal-amount">0</span></p>
+                            </div>
+                            <div class="form-group">
+                                <label>Pajak</label>
+                                <p class="font-weight-bold">Rp <span id="tax-amount-display">0</span></p>
+                            </div>
+                            <div class="form-group">
+                                <label>Grand Total</label>
+                                <p class="font-weight-bold text-success" style="font-size: 1.2em;">Rp <span id="grand-total">0</span></p>
                             </div>
 
                             <button type="submit" class="btn btn-primary">
@@ -152,7 +181,25 @@ $(document).ready(function() {
             const val = parseFloat($(this).val()) || 0;
             total += val;
         });
-        $('#total-amount').text('Rp ' + total.toLocaleString('id-ID'));
+        $('#subtotal-amount').text('Rp ' + total.toLocaleString('id-ID'));
+        calculateTax();
+    }
+
+    function calculateTax() {
+        let subtotal = 0;
+        $('.subtotal').each(function() {
+            const val = parseFloat($(this).val()) || 0;
+            subtotal += val;
+        });
+        let taxAmount = 0;
+        if ($('#use_tax').is(':checked')) {
+            const rate = parseFloat($('#tax-select option:selected').data('rate')) || 0;
+            taxAmount = subtotal * (rate / 100);
+        }
+        $('#tax-amount-display').text('Rp ' + taxAmount.toLocaleString('id-ID'));
+        $('#tax-amount-input').val(taxAmount);
+        const grandTotal = subtotal + taxAmount;
+        $('#grand-total').text('Rp ' + grandTotal.toLocaleString('id-ID'));
     }
 
     function validateAllItems() {
@@ -246,6 +293,22 @@ $(document).ready(function() {
     $(document).on('click', '.remove-item', function() {
         $(this).closest('.item-row').remove();
         calculateTotal();
+    });
+
+    // Tax checkbox toggle
+    $('#use_tax').change(function() {
+        if ($(this).is(':checked')) {
+            $('#tax-section').show();
+        } else {
+            $('#tax-section').hide();
+            $('#tax-select').val('');
+        }
+        calculateTax();
+    });
+
+    // Tax select change
+    $(document).on('change', '#tax-select', function() {
+        calculateTax();
     });
 
     // Validate form before submit

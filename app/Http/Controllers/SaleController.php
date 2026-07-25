@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Tax;
 use App\Services\ActivityLogger;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -50,8 +51,9 @@ class SaleController extends Controller
     public function create(): View
     {
         $products = Product::where('stock', '>', 0)->get();
+        $taxes = Tax::where('is_active', true)->get();
 
-        return view('sales.create', compact('products'));
+        return view('sales.create', compact('products', 'taxes'));
     }
 
     /**
@@ -67,16 +69,27 @@ class SaleController extends Controller
             $total += $item['quantity'] * $item['sell_price'];
         }
 
+        // Calculate tax
+        $taxAmount = 0;
+        if (!empty($validated['tax_id'])) {
+            $tax = Tax::find($validated['tax_id']);
+            if ($tax) {
+                $taxAmount = $total * ($tax->rate / 100);
+            }
+        }
+
         // Generate unique invoice number
         $invoiceNumber = $this->generateInvoiceNumber();
 
         // Use DB::transaction for data integrity
-        $sale = DB::transaction(function () use ($validated, $total, $invoiceNumber) {
+        $sale = DB::transaction(function () use ($validated, $total, $invoiceNumber, $taxAmount) {
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => auth()->id(),
                 'sale_date' => $validated['sale_date'],
                 'total' => $total,
+                'tax_id' => $validated['tax_id'] ?? null,
+                'tax_amount' => $taxAmount,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -129,8 +142,9 @@ class SaleController extends Controller
         }
 
         $products = Product::where('stock', '>', 0)->get();
+        $taxes = Tax::where('is_active', true)->get();
 
-        return view('sales.edit', compact('sale', 'products'));
+        return view('sales.edit', compact('sale', 'products', 'taxes'));
     }
 
     /**
@@ -151,8 +165,17 @@ class SaleController extends Controller
             $newTotal += $item['quantity'] * $item['sell_price'];
         }
 
+        // Calculate tax
+        $taxAmount = 0;
+        if (!empty($validated['tax_id'])) {
+            $tax = Tax::find($validated['tax_id']);
+            if ($tax) {
+                $taxAmount = $newTotal * ($tax->rate / 100);
+            }
+        }
+
         // Use DB::transaction for data integrity
-        DB::transaction(function () use ($validated, $newTotal, $sale) {
+        DB::transaction(function () use ($validated, $newTotal, $sale, $taxAmount) {
             // Get current items
             $currentItems = $sale->items->keyBy('product_id');
 
@@ -204,9 +227,11 @@ class SaleController extends Controller
                 }
             }
 
-            // Update sale total and notes
+            // Update sale total, tax, and notes
             $sale->update([
                 'total' => $newTotal,
+                'tax_id' => $validated['tax_id'] ?? null,
+                'tax_amount' => $taxAmount,
                 'notes' => $validated['notes'] ?? null,
             ]);
         });
@@ -248,7 +273,7 @@ class SaleController extends Controller
             abort(403, 'Akses ditolak.');
         }
 
-        $sale->load('items.product', 'user');
+        $sale->load('items.product', 'user', 'tax');
 
         $html = view('sales.invoice', compact('sale'))->render();
 

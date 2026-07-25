@@ -18,6 +18,8 @@ class Purchase extends Model
         'supplier_id',
         'purchase_date',
         'total',
+        'tax_id',
+        'tax_amount',
         'notes',
         'payment_status',
     ];
@@ -25,6 +27,7 @@ class Purchase extends Model
     protected $casts = [
         'purchase_date' => 'date',
         'total' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
     ];
 
     /**
@@ -69,6 +72,14 @@ class Purchase extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
+    }
+
+    /**
+     * Pajak yang dikenakan pada pembelian ini.
+     */
+    public function tax(): BelongsTo
+    {
+        return $this->belongsTo(Tax::class);
     }
 
     /**

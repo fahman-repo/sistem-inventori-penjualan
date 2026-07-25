@@ -15,11 +15,21 @@ class StockOpnameController extends Controller
     /**
      * Display a listing of stock opnames.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
-        $stockOpnames = StockOpname::with('user', 'items')
+        $stockOpnames = StockOpname::with('user')
+            ->withCount([
+                'items',
+                'items as adjusted_items_count' => fn ($query) => $query->where('difference', '!=', 0),
+            ])
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('opname_date', '>=', $request->input('date_from'));
+            })
+            ->when($request->filled('date_to'), function ($query) use ($request) {
+                $query->whereDate('opname_date', '<=', $request->input('date_to'));
+            })
             ->latest()
-            ->paginate(15);
+            ->get();
 
         return view('stock-opnames.index', compact('stockOpnames'));
     }

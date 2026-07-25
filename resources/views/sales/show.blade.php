@@ -28,8 +28,18 @@
                                 <td>{{ $sale->user->name }}</td>
                             </tr>
                             <tr>
-                                <th>Total</th>
+                                <th>Subtotal</th>
                                 <td>Rp {{ number_format($sale->total, 2, ',', '.') }}</td>
+                            </tr>
+                            @if($sale->tax_id)
+                            <tr>
+                                <th>Pajak {{ $sale->tax ? '(' . $sale->tax->name . ')' : '' }}</th>
+                                <td>Rp {{ number_format($sale->tax_amount, 2, ',', '.') }}</td>
+                            </tr>
+                            @endif
+                            <tr>
+                                <th>Grand Total</th>
+                                <td><strong>Rp {{ number_format($sale->total + $sale->tax_amount, 2, ',', '.') }}</strong></td>
                             </tr>
                             @if($sale->notes)
                             <tr>

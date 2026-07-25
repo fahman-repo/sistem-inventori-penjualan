@@ -42,8 +42,18 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Total</th>
+                                <th>Subtotal</th>
                                 <td>Rp {{ number_format($purchase->total, 2, ',', '.') }}</td>
+                            </tr>
+                            @if($purchase->tax_id)
+                            <tr>
+                                <th>Pajak {{ $purchase->tax ? '(' . $purchase->tax->name . ')' : '' }}</th>
+                                <td>Rp {{ number_format($purchase->tax_amount, 2, ',', '.') }}</td>
+                            </tr>
+                            @endif
+                            <tr>
+                                <th>Grand Total</th>
+                                <td><strong>Rp {{ number_format($purchase->total + $purchase->tax_amount, 2, ',', '.') }}</strong></td>
                             </tr>
                             @if($purchase->notes)
                             <tr>
