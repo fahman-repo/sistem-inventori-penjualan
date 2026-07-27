@@ -73,6 +73,7 @@ Gunakan middleware custom (misal `CheckRole`) atau package `spatie/laravel-permi
 9. Setiap user baru yang dibuat lewat modul manajemen user WAJIB melalui Form Request dengan validasi role yang valid (admin/kasir) — jangan biarkan role diinput bebas dari form.
 10. Pajak bersifat opsional per transaksi. Jika dipilih, `tax_amount` dihitung dari `subtotal × rate / 100` dan disimpan di header transaksi bersama `tax_id`.
 11. `buy_price` wajib disimpan di `sale_items` saat transaksi penjualan (diambil dari `products.buy_price` saat itu) untuk menjaga akurasi laporan laba kotor — jangan ambil harga terbaru saat menampilkan laporan.
+12. *(Fase 4)* Setiap penjualan yang statusnya `credit` WAJIB tercatat sebagai piutang di `customer_debts`, mengikuti pola perhitungan status yang SAMA PERSIS dengan `supplier_debts` di Fase 3 (unpaid/partial/paid dihitung dari paid_amount vs total_amount) — reuse logic/struktur yang sudah ada, jangan buat pola baru yang berbeda.
 
 ## Perintah yang Sering Dipakai
 ```bash

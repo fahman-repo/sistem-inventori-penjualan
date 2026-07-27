@@ -51,6 +51,38 @@
             </div>
         </div>
 
+        <!-- Debt Summary Widgets -->
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>Rp {{ number_format($totalUnpaidSupplierDebt, 0, ',', '.') }}</h3>
+                        <p>Total Utang Supplier Belum Lunas</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-hand-holding-usd"></i>
+                    </div>
+                    <a href="{{ route('supplier-debts.index') }}" class="small-box-footer">
+                        Lihat Detail <i class="fa fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>Rp {{ number_format($totalUnpaidCustomerDebt, 0, ',', '.') }}</h3>
+                        <p>Total Piutang Pelanggan Belum Lunas</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-money-bill-wave"></i>
+                    </div>
+                    <a href="{{ route('customer-debts.index') }}" class="small-box-footer">
+                        Lihat Detail <i class="fa fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Today's Sales Card -->
         <div class="row mb-4">
             <div class="col-lg-4 col-md-6">
@@ -157,6 +189,103 @@
                     <div class="card-footer">
                         <a href="{{ route('supplier-debts.index') }}" class="btn btn-warning btn-sm">
                             <i class="fa fa-hand-holding-usd"></i> Lihat Semua Utang
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Customer Debt Warning Widget -->
+        @if($totalDueCustomerDebts > 0)
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ $totalDueCustomerDebts }}</h3>
+                        <p>Piutang Mendekati/Lewat Jatuh Tempo</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-money-bill-wave"></i>
+                    </div>
+                    <a href="{{ route('customer-debts.index') }}" class="small-box-footer">
+                        Lihat Semua <i class="fa fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>Rp {{ number_format($totalDueCustomerAmount, 0, ',', '.') }}</h3>
+                        <p>Total Sisa Piutang Jatuh Tempo</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fa fa-exclamation-triangle"></i>
+                    </div>
+                    <a href="{{ route('customer-debts.index') }}" class="small-box-footer">
+                        Lihat Piutang Aktif <i class="fa fa-arrow-circle-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Debt List Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fa fa-money-bill-wave mr-2"></i>Piutang Pelanggan Perlu Perhatian</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Pelanggan</th>
+                                    <th>Sisa Piutang</th>
+                                    <th>Jatuh Tempo</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($dueCustomerDebts as $debt)
+                                <tr>
+                                    <td>{{ $debt->customer->name ?? '-' }}</td>
+                                    <td class="font-weight-bold text-danger">
+                                        Rp {{ number_format($debt->remaining_amount, 0, ',', '.') }}
+                                    </td>
+                                    <td>
+                                        @if($debt->due_date)
+                                            @if($debt->due_date < now())
+                                                <span class="text-danger font-weight-bold">
+                                                    {{ $debt->due_date->format('d/m/Y') }}
+                                                    <i class="fa fa-exclamation-circle" title="Terlambat"></i>
+                                                </span>
+                                            @else
+                                                {{ $debt->due_date->format('d/m/Y') }}
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ $debt->status_badge }}">
+                                            {{ $debt->status_label }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ route('customer-debts.show', $debt->id) }}" class="btn btn-sm btn-info">
+                                            <i class="fa fa-eye"></i> Detail
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ route('customer-debts.index') }}" class="btn btn-info btn-sm">
+                            <i class="fa fa-money-bill-wave"></i> Lihat Semua Piutang
                         </a>
                     </div>
                 </div>

@@ -28,6 +28,20 @@
                                 <td>{{ $sale->user->name }}</td>
                             </tr>
                             <tr>
+                                <th>Pelanggan</th>
+                                <td>{{ $sale->customer->name ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Jenis Pembayaran</th>
+                                <td>
+                                    @if($sale->payment_status === 'cash')
+                                        <span class="badge badge-success">Cash (Lunas)</span>
+                                    @else
+                                        <span class="badge badge-warning">Hutang (Kredit)</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Subtotal</th>
                                 <td>Rp {{ number_format($sale->total, 2, ',', '.') }}</td>
                             </tr>

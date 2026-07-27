@@ -364,6 +364,11 @@ return [
                     'icon' => 'fas fa-fw fa-truck',
                 ],
                 [
+                    'text' => 'Pelanggan',
+                    'url' => 'admin/customers',
+                    'icon' => 'fas fa-fw fa-users',
+                ],
+                [
                     'text' => 'Pajak',
                     'url' => 'admin/taxes',
                     'icon' => 'fas fa-fw fa-percent',
@@ -427,6 +432,12 @@ return [
             'text' => 'Utang Supplier',
             'url' => 'admin/supplier-debts',
             'icon' => 'fas fa-fw fa-hand-holding-usd',
+            'can' => 'view-master-data',
+        ],
+        [
+            'text' => 'Piutang Pelanggan',
+            'url' => 'admin/customer-debts',
+            'icon' => 'fas fa-fw fa-money-bill-wave',
             'can' => 'view-master-data',
         ],
     ],

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Sale extends Model
 {
@@ -14,11 +15,13 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'user_id',
+        'customer_id',
         'sale_date',
         'total',
         'tax_id',
         'tax_amount',
         'notes',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -44,10 +47,26 @@ class Sale extends Model
     }
 
     /**
+     * Pelanggan yang melakukan pembelian.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    /**
      * Detail item penjualan.
      */
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    /**
+     * Piutang pelanggan yang timbul dari penjualan ini.
+     */
+    public function customerDebt(): HasOne
+    {
+        return $this->hasOne(CustomerDebt::class);
     }
 }

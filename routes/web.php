@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerDebtController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
@@ -23,11 +25,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::resource('admin/products', ProductController::class);
     Route::resource('admin/purchases', PurchaseController::class);
     Route::resource('admin/suppliers', SupplierController::class);
+    Route::resource('admin/customers', CustomerController::class);
     Route::resource('admin/taxes', TaxController::class);
     Route::get('admin/supplier-debts', [SupplierDebtController::class, 'index'])->name('supplier-debts.index');
     Route::get('admin/supplier-debts/export', [SupplierDebtController::class, 'export'])->name('supplier-debts.export');
     Route::get('admin/supplier-debts/{supplierDebt}', [SupplierDebtController::class, 'show'])->name('supplier-debts.show');
     Route::post('admin/supplier-debts/{supplierDebt}/payments', [SupplierDebtController::class, 'storePayment'])->name('supplier-debts.payments.store');
+    Route::get('admin/customer-debts', [CustomerDebtController::class, 'index'])->name('customer-debts.index');
+    Route::get('admin/customer-debts/export', [CustomerDebtController::class, 'export'])->name('customer-debts.export');
+    Route::get('admin/customer-debts/{customerDebt}', [CustomerDebtController::class, 'show'])->name('customer-debts.show');
+    Route::post('admin/customer-debts/{customerDebt}/payments', [CustomerDebtController::class, 'storePayment'])->name('customer-debts.payments.store');
     Route::get('admin/reports/stock', [App\Http\Controllers\ReportController::class, 'stock'])->name('reports.stock');
     Route::get('admin/reports/sales', [App\Http\Controllers\ReportController::class, 'sales'])->name('reports.sales');
     Route::get('admin/reports/sales/export', [App\Http\Controllers\ReportController::class, 'exportSalesExcel'])->name('reports.sales.export');

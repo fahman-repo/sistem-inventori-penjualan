@@ -82,7 +82,11 @@
                                     <td>{{ $sale->sale_date->format('d/m/Y') }}</td>
                                     <td>Rp {{ number_format($sale->total + $sale->tax_amount, 2, ',', '.') }}</td>
                                     <td>
-                                        <span class="badge badge-success">Selesai</span>
+                                        @if($sale->payment_status === 'cash')
+                                            <span class="badge badge-success">Cash</span>
+                                        @else
+                                            <span class="badge badge-warning">Hutang</span>
+                                        @endif
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info">

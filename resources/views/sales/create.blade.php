@@ -22,6 +22,43 @@
                                 <input type="date" class="form-control" id="sale_date" name="sale_date" value="{{ date('Y-m-d') }}" required>
                             </div>
 
+                            <div class="form-group">
+                                <label>Jenis Pembayaran</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_status" id="payment_cash" value="cash" checked>
+                                    <label class="form-check-label" for="payment_cash">
+                                        <i class="fa fa-money text-success"></i> Cash (Lunas)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_status" id="payment_credit" value="credit">
+                                    <label class="form-check-label" for="payment_credit">
+                                        <i class="fa fa-credit-card text-warning"></i> Hutang (Kredit)
+                                    </label>
+                                </div>
+                                @error('payment_status')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div id="customer-section" style="display:none;">
+                                <div class="form-group">
+                                    <label for="customer_id">Pelanggan <span class="text-danger">*</span></label>
+                                    <select name="customer_id" id="customer_id" class="form-control @error('customer_id') is-invalid @enderror">
+                                        <option value="">-- Pilih Pelanggan --</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}" {{ old('customer_id') == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('customer_id')
+                                        <span class="invalid-feedback d-block">{{ $message }}</span>
+                                    @enderror
+                                    <small class="text-muted">Wajib dipilih untuk transaksi hutang/kredit.</small>
+                                </div>
+                            </div>
+
                             <input type="hidden" id="products-data" value="{{ $products->map(fn($p) => ['id' => $p->id, 'name' => $p->name, 'sell_price' => $p->sell_price, 'unit' => $p->unit, 'stock' => $p->stock])->toJson() }}">
 
                             <hr>
@@ -304,6 +341,16 @@ $(document).ready(function() {
             $('#tax-select').val('');
         }
         calculateTax();
+    });
+
+    // Payment status toggle - show/hide customer section
+    $('input[name="payment_status"]').on('change', function() {
+        if ($(this).val() === 'credit') {
+            $('#customer-section').show();
+        } else {
+            $('#customer-section').hide();
+            $('#customer_id').val('');
+        }
     });
 
     // Tax select change

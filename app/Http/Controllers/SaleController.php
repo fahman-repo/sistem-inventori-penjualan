@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\UpdateSaleRequest;
+use App\Models\Customer;
+use App\Models\CustomerDebt;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Tax;
@@ -52,8 +54,9 @@ class SaleController extends Controller
     {
         $products = Product::where('stock', '>', 0)->get();
         $taxes = Tax::where('is_active', true)->get();
+        $customers = Customer::orderBy('name')->get();
 
-        return view('sales.create', compact('products', 'taxes'));
+        return view('sales.create', compact('products', 'taxes', 'customers'));
     }
 
     /**
@@ -86,11 +89,13 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => auth()->id(),
+                'customer_id' => $validated['customer_id'] ?? null,
                 'sale_date' => $validated['sale_date'],
                 'total' => $total,
                 'tax_id' => $validated['tax_id'] ?? null,
                 'tax_amount' => $taxAmount,
                 'notes' => $validated['notes'] ?? null,
+                'payment_status' => $validated['payment_status'],
             ]);
 
             // Create sale items and decrease stock
@@ -107,6 +112,16 @@ class SaleController extends Controller
 
                 // Decrease product stock - automatically reduce
                 Product::where('id', $item['product_id'])->decrement('stock', $item['quantity']);
+            }
+
+            if ($validated['payment_status'] === 'credit') {
+                CustomerDebt::create([
+                    'sale_id' => $sale->id,
+                    'customer_id' => $validated['customer_id'],
+                    'total_amount' => $total,
+                    'paid_amount' => 0,
+                    'status' => 'unpaid',
+                ]);
             }
 
             return $sale;

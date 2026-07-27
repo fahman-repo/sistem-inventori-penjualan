@@ -110,6 +110,7 @@
                                     <th>Kasir</th>
                                     <th>Items</th>
                                     <th>Total</th>
+                                    <th>Pembayaran</th>
                                     <th class="text-center">Tindakan</th>
                                 </tr>
                             </thead>
@@ -122,6 +123,13 @@
                                         <td>{{ $sale->user->name }}</td>
                                         <td>{{ $sale->items->count() }} item</td>
                                         <td>Rp {{ number_format($sale->total, 0, ',', '.') }}</td>
+                                        <td>
+                                            @if($sale->payment_status === 'cash')
+                                                <span class="badge badge-success">Cash</span>
+                                            @else
+                                                <span class="badge badge-warning">Hutang</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-info">
                                                 <i class="fa fa-eye"></i> Detail

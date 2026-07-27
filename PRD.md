@@ -100,6 +100,14 @@ distro, dsb), lengkap dengan laporan dasar.
 - Toggle dark/light mode tersedia di navbar AdminLTE.
 - Preferensi tersimpan di session dan diterapkan via middleware `HandleDarkMode`.
 
+### 3.12 Pelanggan & Piutang (Fase 4)
+- Modul pelanggan penuh: CRUD data pelanggan (nama, telepon, alamat, email).
+- Setiap transaksi penjualan bisa dikaitkan ke pelanggan (opsional — pelanggan umum tanpa dicatat tetap didukung) dan punya status pembayaran: `cash` (lunas langsung) atau `credit` (menjadi piutang/bon).
+- Jika `credit`: sistem otomatis membuat record di `customer_debts` sebesar total penjualan, dengan status awal `unpaid`.
+- Kasir/admin bisa mencatat pembayaran cicilan piutang (`customer_debt_payments`) — status piutang otomatis berubah jadi `partial` atau `paid` tergantung total yang sudah dibayar vs total piutang. Pola ini identik dengan alur utang supplier di Fase 3, hanya arahnya dibalik (uang masuk, bukan keluar).
+- Halaman daftar piutang: filter berdasarkan status (unpaid/partial/paid) dan pelanggan, tampilkan sisa piutang & jatuh tempo.
+- Riwayat pembelian per pelanggan bisa dilihat dari halaman detail pelanggan.
+
 ### 3.7 Dashboard
 - Ringkasan cepat saat login: total produk, produk stok menipis, total penjualan hari ini, grafik penjualan 7 hari terakhir, grafik laba 7 hari terakhir.
 - Notifikasi stok menipis di navbar (bell icon, AJAX) menampilkan daftar produk dengan stok ≤ min_stock.

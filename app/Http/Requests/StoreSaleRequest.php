@@ -25,6 +25,8 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'sale_date' => ['required', 'date'],
+            'customer_id' => ['nullable', 'exists:customers,id', 'required_if:payment_status,credit'],
+            'payment_status' => ['required', 'in:cash,credit'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
